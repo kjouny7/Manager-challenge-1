@@ -35,8 +35,6 @@ const SUPABASE_URL      = "https://ipwdpaelvlwwwvtsuca.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlweXdkcGFlbHZsdnd3dnRzdWNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNjEyMjksImV4cCI6MjA5MzgzNzIyOX0.aDZvwBGF20PpFhqkkDa7pZ2rwihFGt-OJebO84uX4X8";
 const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-import { useState, useEffect, useRef, useCallback } from "react";
-
 const DEFAULT_PIN      = "1234";
 const DEFAULT_PASSWORD = "Admin2024!";
 const MAX_ATTEMPTS     = 3;
