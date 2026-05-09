@@ -33,7 +33,7 @@ const { useState, useEffect, useRef, useCallback } = React;
 // REMPLACE CES DEUX VALEURS PAR TES CLÉS SUPABASE
 const SUPABASE_URL      = "https://ipwdpaelvlwwwvtsuca.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlweXdkcGFlbHZsdnd3dnRzdWNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNjEyMjksImV4cCI6MjA5MzgzNzIyOX0.aDZvwBGF20PpFhqkkDa7pZ2rwihFGt-OJebO84uX4X8";
-const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const db = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const DEFAULT_PIN      = "1234";
 const DEFAULT_PASSWORD = "Admin2024!";
@@ -50,24 +50,23 @@ async function hashValue(v) {
 
 // ── SUPABASE DATA LAYER ───────────────────────────────────────────────────────
 async function dbGetConfig() {
-  const { data } = await supabase.from("config").select("*").eq("id",1).single();
+  const { data } = await db.from("config").select("*").eq("id",1).single();
   return data;
 }
 async function dbSaveConfig(cfg) {
-  const { criteria, restaurants, ...rest } = cfg;
-  await supabase.from("config").upsert({
+  await db.from("config").upsert({
     id:1,
-    title: rest.title,
-    subtitle: rest.subtitle,
-    reglement: rest.reglement,
-    hidden: rest.hidden,
-    end_date: rest.endDate||"",
-    restaurants: restaurants||["Decize","Avermes","Moulins"],
-    criteria: criteria||[],
+    title: cfg.title,
+    subtitle: cfg.subtitle,
+    reglement: cfg.reglement,
+    hidden: cfg.hidden,
+    end_date: cfg.endDate||"",
+    restaurants: cfg.restaurants||["Decize","Avermes","Moulins"],
+    criteria: cfg.criteria||[],
   });
 }
 async function dbGetParticipants() {
-  const { data } = await supabase.from("participants").select("*").order("updated_at",{ascending:false});
+  const { data } = await db.from("participants").select("*").order("updated_at",{ascending:false});
   return (data||[]).map(p => ({
     id: p.id,
     name: p.name,
@@ -78,7 +77,7 @@ async function dbGetParticipants() {
   }));
 }
 async function dbSaveParticipant(p) {
-  await supabase.from("participants").upsert({
+  await db.from("participants").upsert({
     id: p.id,
     name: p.name,
     restaurant: p.restaurant||null,
@@ -88,10 +87,10 @@ async function dbSaveParticipant(p) {
   });
 }
 async function dbDeleteParticipant(id) {
-  await supabase.from("participants").delete().eq("id",id);
+  await db.from("participants").delete().eq("id",id);
 }
 async function dbGetAuth() {
-  const { data } = await supabase.from("auth_config").select("*").eq("id",1).single();
+  const { data } = await db.from("auth_config").select("*").eq("id",1).single();
   return data ? {
     pinHash: data.pin_hash,
     passwordHash: data.password_hash,
@@ -100,7 +99,7 @@ async function dbGetAuth() {
   } : null;
 }
 async function dbSaveAuth(auth) {
-  await supabase.from("auth_config").upsert({
+  await db.from("auth_config").upsert({
     id:1,
     pin_hash: auth.pinHash,
     password_hash: auth.passwordHash,
@@ -109,10 +108,10 @@ async function dbSaveAuth(auth) {
   });
 }
 async function dbAddLog(msg) {
-  await supabase.from("historique").insert({ message: msg });
+  await db.from("historique").insert({ message: msg });
 }
 async function dbGetLog() {
-  const { data } = await supabase.from("historique").select("*").order("created_at",{ascending:false}).limit(50);
+  const { data } = await db.from("historique").select("*").order("created_at",{ascending:false}).limit(50);
   return (data||[]).map(l => ({ ts: new Date(l.created_at).getTime(), msg: l.message }));
 }
 function computeTotal(p, criteria) {
@@ -197,7 +196,7 @@ function App() {
     init();
 
     // ── REALTIME SUBSCRIPTIONS ────────────────────────────────────────────────
-    const chanParticipants = supabase
+    const chanParticipants = db
       .channel("participants-live")
       .on("postgres_changes", { event:"*", schema:"public", table:"participants" }, async () => {
         const p = await dbGetParticipants();
@@ -205,7 +204,7 @@ function App() {
       })
       .subscribe();
 
-    const chanConfig = supabase
+    const chanConfig = db
       .channel("config-live")
       .on("postgres_changes", { event:"*", schema:"public", table:"config" }, async () => {
         const c = await dbGetConfig();
@@ -222,8 +221,8 @@ function App() {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(chanParticipants);
-      supabase.removeChannel(chanConfig);
+      db.removeChannel(chanParticipants);
+      db.removeChannel(chanConfig);
     };
   }, []);
 
@@ -991,7 +990,7 @@ function AdminView({ config, setConfig, participants, setParticipants, ranked, a
             </div>
 
             <h3 style={{ ...s.sectionTitle, marginTop:32, color:"#f87171" }}>Zone dangereuse</h3>
-            <button style={s.dangerBtn} onClick={act(() => { if (window.confirm("Supprimer TOUS les participants ?")) { supabase.from("participants").delete().neq("id","00000000-0000-0000-0000-000000000000").then(()=>{ setParticipants([]); addLog("Tous les participants supprimés"); }); } })}>🗑 Réinitialiser participants</button>
+            <button style={s.dangerBtn} onClick={act(() => { if (window.confirm("Supprimer TOUS les participants ?")) { db.from("participants").delete().neq("id","00000000-0000-0000-0000-000000000000").then(()=>{ setParticipants([]); addLog("Tous les participants supprimés"); }); } })}>🗑 Réinitialiser participants</button>
             <button style={{ ...s.dangerBtn, marginLeft:10 }} onClick={act(() => { if (window.confirm("Supprimer TOUS les critères ?")) { setConfig(c => { const n={...c,criteria:[]}; dbSaveConfig(n); return n; }); addLog("Critères supprimés"); } })}>🗑 Réinitialiser critères</button>
           </div>
         )}
