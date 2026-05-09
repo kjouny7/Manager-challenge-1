@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="theme-color" content="#DA291C"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="Manager Challenge"/>
+  <title>Manager Challenge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html,body,#root{min-height:100%}
+    body{-webkit-font-smoothing:antialiased;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- React + ReactDOM + Babel -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
+  <script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef, useCallback } = React;
+
+// ── SUPABASE CONFIG ───────────────────────────────────────────────────────────
+// REMPLACE CES DEUX VALEURS PAR TES CLÉS SUPABASE
+const SUPABASE_URL      = "https://ipwdpaelvlwwwvtsuca.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlweXdkcGFlbHZsdnd3dnRzdWNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNjEyMjksImV4cCI6MjA5MzgzNzIyOX0.aDZvwBGF20PpFhqkkDa7pZ2rwihFGt-OJebO84uX4X8";
+const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+import { useState, useEffect, useRef, useCallback } from "react";
+
+const DEFAULT_PIN      = "1234";
+const DEFAULT_PASSWORD = "Admin2024!";
+const MAX_ATTEMPTS     = 3;
+const LOCKOUT_MS       = 5 * 60 * 1000;
+const AUTO_LOGOUT_MS   = 15 * 60 * 1000;
+const MEDAL            = ["🥇","🥈","🥉"];
+const LOGO_SRC           = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHgAAAB4CAYAAAA5ZDbSAAAiPUlEQVR42u19a3Bd13Xet9be59wnLp4ESIiUSIqSaNIPxaAcx0lkMZESTx5ymgnQOE3deCZDORM3rac/krHGAZGHx2mnnXHstJZaxZ40bhIgid0mjdPYMmk9EtkhFCsSKVHmUxSfAPG673P2Xqs/zrkgqDfFCwqS76fBDEgROPvstdfrW2vtC3TQQQcddNBBBx100EEHHXTQQQcddNBBBx100EEHHXTQQQcddNBBBx100EEHHXTwPQdVpc4uXDns2hQmCACmp++zI5jG1LH7hYi86p4A2OCBCSWCXvMDNn2/BYBpTC///cjICIBeAcbkWq/pTaqp4/wyG9x/2Z8nR83L/dt2r0d11Ly2f7tvzSkMrS3hThqiMa+qIfB0V/XEoxPl6qlMM7rYlcnm3tU/PPBI0OifxNAv/wMRVVoCIJqQ1RJu63erLvbL3N/tbSwezV48d0yVQNlcl++7eSfbWvFb6B/9n0QUqY4zaEIJa0Ob14yAJydHzdjYlNf6VzcjOvs3i8/t25hxZ7syJoY2F9CsLSE3WMLchbyEvT9UKW647TMo3vaHlNtyQnUyJBqL2ircfeOWdk841X/aDBz+SPXk4x/PVI91WV8BmnWAmxATQG0RkawDsrc8net++3+koQ9+UQGCKohIv+cFnARPREQQrf3t+5aOfP1PUH/seqkdRI4rznio9UwAsYsij8xAsBj1o3/zLiC/9RQGf+AHKf+BUwpQu7RmWbgXv7nJNR57lGV60+zxh1CQsgudKouSsqqDJZEcIuTY5DZy1/afAuxNn6Pe0X+bmOs7/Bst5DfaZ9D+vXeY3RNw/tyXPofZ/b/q5r+KTPOEFI0wSWAJgLAIFAD1BewD7Qmq1Dz19ciUhjY1mzMPaeUrX8Bc9J9001RENOXbIdz6yb/e2ph79Bv+4oOb4up3om67FBqnlpTB1kHBPhTLIE9ZzEOaCzL/xNm4d/OPf6x54jNMtPtXD9y3J1BV90YKmd5Y7d1nie9yjeO//98y+PZHTz395WggbNpcnGeAIcYjcrELChkrRIgq4jJh3hoFyDcRw8t8ZoAH3/thQN7585S/+8/0qcmQ3v76zPVyDFB78AY388g3qif/bqttHnM5I5bVAx7wzmsM8tmuHuuXamo4UpgaQ5twlENNeqPS9e8NF/i2z/du/41fSff4e0/AemBPQLvuj935L/260Uc/ff7xB6KeLg1tJDDxMDwxyux8z5Z3mPPno+chGQyto40Lp57wBWqYwDuACLWM900a0qD/R04Ut/zkj1L+7udeT+DV+hmtfXmTv/jtR5unv7GJFo+7bNi0cBbi8nDCwl3rOBh4J2ZOzRwolgq7wvi7cOUjmgljEnHgMNB61Wil76e559afvz3IvesA8B8iYOoNSaP4DRHueJLe6Mwjt2Du6/dER//YFUNrERVBNgcJq1qmghRuGjO48V/91tD7/vdtQ7f+313o++Cnc6XvM1EUO9gmRD1CH5uueIbzS9/eJrPf+abqt27G9LBpPeO1p2Y7SXWxH9Gxh+KL/2cTVZ50OZOxFAtIG6g2646H3sZyw08c89f9xEcGf/yvb9Nt//LuaHj349Jzo8TIu8gSalQlzRnOLj0UBQt//1D99IFbiab8/v3j5o3Y6zdEwNh5iGjX/XFj/jtfMO7YlqhcQ5ZKbCQHjzwWY+sLN/4gB8M/8CtEvzhOVDxHXXQe9t2fztxw18lg/XtsRTJeQw8RA4MaR7XnYyl/e3Nz9tEv0q574qmdh16zddq/fz8Tjfnmc3/+4ejcE5urF07F2dBakRjwDKdZyV//LhtsvP1E5vqfust2/9wXn/v7n8sV1v2Lv8rdeOd/yW37WVOjYeM5A+O7EBiDjK3Y2rNfi23j2S9o/bEtr5Tjv6UErJOThkYnRU9Pfozrj95anjkUG1s07BhWQ5QrNu7Z9n4brP/+36Nw9PP67Gcyqkqqk4b6di1haPcP88Cdp7h0k6nHsQSUg4jActU2zz8W89wjt2r5zz82NjopOjlpXl17EwpU9XhWy09+XGf+2XdZa9QLPDnEHEqVh9R3jxxB6bb3E73nmOpkeP37purPPvuZDNEHvgTZ+rH8dd/fBHp94HvVeA9rYib/PIJ4+hZ38cA9u3dPOEwPm7e0gFVBNDYmijP90dwTn8Xc47mQ1FoOiKgBOC+53Eam4m2Hkd95n+4bt7hpLiYiTQiQSSZ6xykbXH+7y247Eeb7QB7CVAAjopwsWpz5p1w098xnFejH6Ji8Koc9NcW7dz/kaie/9FWUv70p03weIRyLc1CraAQZ373jx0ym532fpPxdz+lT48s59803/7umHtgT0IZf+APJbf3HQs/NzDELew94QaDVYP75/bHhw7+uzb/8Rdp1T6w6bt+6Gjx9n1VVNI7/yb22+S1P9TOR0SYpxVASVDnS3ObvM7A3fITovcexH1gZLBGN+WRDP3SiOLx7njM7yMWsJEWo7wE5Q1y/EIXVh72b/fy9SVBzj315azJqaGzM6/wf3aHVQ3e48lEPFaMKgDyc1H3QfUPQjNZ/Fn0f/EvdN27p7ROXR+jH7hTVcc4M33ov+t5NNRKIJagGgPfIBRVeeP6b4peOfFz1H4aw/9oWTvjaae84Y6RXMPenG9E88uHawhEKjAnERSAImiBtdmfIFzfPoW/7vOqkwd69L46Ej90pqkqc3fJ7tueHyfs8QCHEl+ClAGMQVE4fIGk8+WHVfdsxlQjgResBCDt2GFXNlc8fvVcXj0hoScFZgAKwJaha2Ow2ZIKbP0dEEWYOvTgKHhsT7Acj2P6Pnjd+PXfddaYuxilnQTaEBZva+SNilo6/GxfP99PuCYepMX7LCXjv3iSQWazOflzrz/YFtqGggCAFsIYQjlyhfyvUDv8R0TufAeaZiF4s4NFRAcYYjY1/05SBfwr6h01TnPdowIQKVUc+XtCwcaKvfuShXhob8/v37n/Re+4fHzf09omofuKBW7Ny7s6ofF7URNarA3kGNAvRHnD+5giDN5TSh79UnqmYOaREWxpiSr+z2CzVYXpZEKqqARyht5ih+TNPSvXCk/eoPhVOvdVMdKJB3xStT24J42P/msonfQYRiTJIQ5CKKrpsPdoS294f/d3kp+5xL5m4Eyn27yBa97ay5Pr+czPsbTbhQRSDKIaDRzGfo+jcUW+Ev6Dzj225Y+83/UotVh3n3XsnvOr/2xJkzn6hdu4xX7RVdlKBlwhwBtzIxsWB7cbnB/8Swbsf1wP3BTQ29tIs2eiUAECw4cOPcNetJK6XVAKoN2BHCDUy1HjOFwbrv4b64Z8dG5vyeuC+4C0h4MTf7NW9ezWoN+e+UVt6asA0KqROGASwiQFfc4X+zcRm82eIN86qjttXJAXumPBEhNymX/jTKD8UemNNYKAqAlgDFcNYrEkoJ29B/ehHgQMWuGPFu97BigMWlbmPWj15i2meEKNlVopA8EDE6qOsJepvBIMb9xKRYOTMy1KgRNAkeJrmUvGm3+8auIHiqOlUCQSF8XVksWiWju2X6OKpvaqaxcg97lr44mugwZRWVc50xc89tSFcfF4DJgIJwHUAXjgsmXI1e1ya6z+vv6kM4BVZKCLon/3ZzxkAARW3/KEtdCtzLCoWYAuIQ2i9rT73iC4uPPNrwIgn2u1UQUmRZ7cDRnx14blfm3vmUc1ZZ5mAXJyFdQSfqaLSladK7m0V4APHkqdOvBoLJaBdDnbd56tSPG5yOUMkAhIQBFlqULh0ghtnp7cC08XkANNbwERP32cBQE7vv7dES0E2WnBKabmUHIigML0cm+HF3lv3HMfOUXotNOOOHTsMETVK/bse6hq6iVyz6YkCCAjEApgaQLOqtcOKi1++M9GWcQLGSVUJ7qt3yuIhpXhWiQCBgYnzIBCatuy6b9wGl930uwD8gQN7glejGYkmZGpylGnDB4/7rusXOdvNBFElgjIAEgrjclw0Z03j2a/dC4Bae/OmFbAqCOUzqno8Gy0e3Oqi0+w1IlCUPFotmDycKSK/bvtx1XF+rQHIzp1748lJGBTW/211qXBYMwOBsBdSBsQApAQ0XU84n1s8f/BDRKQHD8LiICwRafPCMx/Km3M5ZnFCASkISgQYL5liyV68GD3V073hj7CXMDJyn7uSeMMUtxz3WhKogcJClZJ3NaGtzZ8Cy+KHtfrEdamZ5jexBo8y7Z5wiJ+6LZu7eHdl5mlvA7WAB2BByAAqoMyALiwVPkk0IaOv1fATKTAKolsvIHvTBQl6ydtYCQSWAB4CG8BW5g4KNQ6/R5//Wv/UTjhMwak+3+8XDr6nuXhQstnQioSAMmAcYKDM/WSCrUw9H5ib2jlKr7XcN4rRJG83g7+VX3cTi6P0HUOohgATkcxraE/3oXHk1wEFpqbozSvgqeREu5lTn27OHdQwLAMagRSAMAgBnHcwpWFav/X24sulIi+/oUkQx3H4G5QfkCZFIBBIDQAFkWd2s1rKzOyoZ05/ZC8AmpiQ+Pxjv5Q3Mzt89XmFOBZhqFeQiSFMUGxAtnvr1644CBo9qKrgwuC2xUZVDnOYJfZGGBYgA4EiEzTRnHtKG4tHfoSIdApTb14TPYUpEE3I4sx3ApLTZLkBggCiUCX4uOl43UauLFb+AqUNT+q+91uMjV1BmW8URKS5W34sDtbdwBXvIcRQFQgJRAUZGMjiOdXF479ENCGqSl5O/bKfPSl5zQJSA3MFrABiA4cMovx1Up4N/+BKC/VEE4LpPYZo+3E1+FvbO8xe4CEGQgwHBaFB0jiOqPKEqD4zMDo6pasZTa+agHVy0oyOQnTuwduLYX1zvTrrWYhJKNFeBZQhnF1PQe+2KtF1NcwM8hW13YyOik6OGgTrTyzW/cPFrvUMZQ8FFEnvrdGAXW1BrL8woPrwDxGRysUn6kYbZDQAkQdRBIPETzacRXZgC6/bftu65BGjV/biIyNQVcpsuHU9soNQKAADNQrPCgbY1xZcKU9vx+KxMSJIqx33TSXggzsOGiIolp69JROU1yFqeCVLggDQEKQMGDaNajHOdN30sCoIo6P+yjSGFFt7mWh4hqj0eFf+BjLCkugDJa0UBIKrSZipDkUXTtyo1anfsVx7V1SdF1UyyXFiAAwBSZDrpUYNzyDXczohRw5eYZG+V4hINXfd15rSFccMBikUDsQxVICQM8DSaa0cf3gJuLzP+k0hYFXQzp0TsaoWq/Uz/37p3GHNhhmrniEwUBhASI2qqWlfg4b2/I8kDRl7He2vicYUSu/eAF4PdQIQg5SXe2UssV347tPa9Md+B3zu3trZE0xeDCXZSxJwM8GDfa53mFXwINHOk5g+a668JTd5h7A09kAtzlV9YAyIFNIEmxgKghU2zYWzJFT9hKpmR0bud61m/zeNBqd5Y7W5cGKbdYtkFZRsOgGsAAsi9QiLG6ASd7/uB418XYhInRn87+UF01QPw0qqrYoCKVQ8SXOOCnpkY23mW0rRPAJroawgIhAne8tEEJ/XTN82TvziyOtelvdRT9gz3O05OdRGAU5YFjAFZKWMaOnENpT3F1ezlWeVBJyQCe7MH9+VkVM+r1UxTkAEgDShA4MaoizguJh9NebqVUI5AYBs/08+6CQTmdCwEJJIHQqBgoIYPdl58Il9mnt+P5WycwmLppfbHQMEi7OoHT7X90kiUozc416H/YIqGEC96eIHg2IeSlZYCmCxUABqHRksxgPFiolmn7l3JSH05hBwSiZUF099qFCinESRg1oiJYAcYByEYp/vGwLk4qcAVPfte7+9ypNcypQGTewZDAYnpylNlxRAE3Flllx5FtBmctBS7SWipKvahAjz/a7W/f3112+5SKen9xgiano5/kC+dwBOVQADkuQ5wgKIJ9+scLN6Zqvq6TzKZ3Q1uMu2C1h1nLETTvWxLZns0ntqs6eFOWOBMLHbHEPYI4KqyazTrkLuCBHJHV23XO3LubC4ri6Uh0+yYRgQOP0++Y9B4IRZSveSNPXBRFDNwfQMl0aG29Na0zd0W0moXx2QBveacvMMmNDW5mZ9Vy6+Gzj8Dto94TA5yWtfg6cOJVxy9Uh3Npzb4ZqLCjIMDQBlKDk44+FUgEwfmb7tpVaw9Hp9/YEDewICalQ/M55btwFQdYBJhYpUiwk2sLCBTVxF6hWolYKSFyl0Qa19EEB0NQ1yI+m7mO7NhgvryakiNgJhvWzrA0uoL3xXK0ceqSwzQ2tdwK0lLpw7sWXx7JNibXRpM6FgeLCokslR1CzVkBs8AySc9VVGdWpMXxVBj3qjEEMQSiOtluVTTb6S9AlKAqQ9Bc6TmN71QGPhASJqJhH063QZybsQTO9ZF+VrxJmk7qCcUKJKUAiMbcA3nyOj4W9fCQ+/BtIkpazJ/DbJAhuOoXDJZgIwwrCeJJ9bb8/OZJ6k4O6vTE6mnPVVagyGdhVR2kR1qicCRMsUtzY2+WpF84n8FEQM1QxgBjW3/l1XZVEAgHZPuMnJUSba/ZVmLXyymB2wYaxCLoCISVwEeRAvIGcuwtfPbUnSsak3h4CJSOtzRyt5FpjlfCVONFkTXtYhRK44XGwLTXesV1RB4K4nmhHNhmHAoq2Y5SV+PUmq2a0vQDyAbDehOGjaedBt76aiCEOWLckK/08gjRrCfrFbG4/ccvAgtN290239Zbpv3I6NTYk2vvwzxXzjHVKuOAvLRAziCMQKQgYODLVZ5IuDz7ZjMIvGxvzUFJhKdzzs6s1nc7m8AVoWmqBCLxDu5RAVCQoFO3dh8Wlki1OqYIzsce046JULZz+pNoBaBUjAxAAxBASjzFKr+XweW1C5cNfEBKTdvdNtFfB011kCoOXT/zwc8GzeuKaiVfGmGAQHSAhPgCeL8ycf+s12R/CZwtCA6kq/+9K5asJWa2qmoWwtwWaWiHbPYuq1lwhfqdIFANSofDfIZeHZAZT6X00dhAhCKFCf1bkTjzcAYHp6eu2b6NqFf16Cm1FwHR4ueYzYJIpmgVNFxFnkN9ySa99Tk1psrJmvNikPClyLynoJI61JU4AYADHATShnEPTcXFRVaqcn7Lv1vVktDSOSHAALRQylhLKEKkA1wMxQufzd5ponOsp/dVhVlbvCvm0azZHnOhH7RJskByAAqAkvAs71Y8Mt75CVp70dODt35L9GtheemqnPZ2haTEgL0dA0FiAJoPAQjhGZLtTK8SfbNsvbqkIF18MXrkPsu0FiAXYQ9ljmUsPY1BeOonvwpk+oan5kz/1tbcbj9plH0O6JbzoARQ7Xf8JdLMNQYF6sPgqjATLZQQX69LLNaINJ7O/Z2hOaLriIoMoJQ3WZzDT5c7rBlJYJRbOYO3nwu+3XodB7F8ZMnGRpooC24gACxBLHAnaNGwHYdjfjrYaJrkeVc/VACcabFT4wzT/BUAkQFjcRsLHtw1i54oALbY9YFGAQpANRgFLCI2nKhydCJwAGUcwITBHDm3fk2mVRWmM2wG1PlGeX/lepr2TUN2NmTlM4TUgWNcioRXPudP3+adTXsIkeJwAol/ffiHjBJrwcQ9KXSWqiAlV1uVIfzx0//RWg66DuG7evr0z4MvpS7A+4a4gbDYIols3yypQojZ3TwgABGsJme9Gd62n7bT1EJC4OIiKTuAasXBOgYELkXE9Wi/9m4198AgDQxlniNgo4Ce9zS8c+UerhPLxzSkzQMMmBKU65LKjJlMhme88SXVdD1zC1pVw2OimTk6MGVDxamY0fzhW6GRCvK0NpDQAJATVQVig5KAPOZOFtr6J/i15u8K8WCVlS7B5O4gACiBhECbkCyYM0B7GRBuF59rUj21RB6Bpeez4YrfB+/mgD8VxCEhOngZUH4BLzqAaqGWR61pt2FrmJSEe39jKV7p6dW3RPZEvdRNpydi3FNMl61EChEPIQUjSEYMJ+QmFoVeZ38z3DWQoKl68XDCALaAixApjziBafXkoO+/RaNNFpitQ4C8TzSc63Mg9dpoMJZLNQzZeIoFfBCL4se9RVHMrDhxBPKef8QvNMy6ZSPFx3cYDnZ2a+gkASlzHWJpeRjrvEpJ+qlKXGQcaqihoxabDn0yDQ2sW5c9LVu35M9fjbMHJ/2/ql2yjgaagqN91MqFRO9lPMCwJCUmJjmnXXzHb1PZD83dfb6PdGQETaXdrgQV1QGGhaYEjKgml8tUwYEpisZnK9hIjOEu2qoesste+WumTc5amTlaPis57S1hHS5X4xQBkGIIrn1Uh1ALXF5OC3qV+6LQLWyUlDu6Zj1I6+u3fd5l9YuHjag02QDlemj0m+t8ZyVI0j6vmZB5Ofnmp7YCOaz4KyCU/VkugLuGclSTU7pTMpDFerL+qGwlBWkCMhTtkzBmm6NhDgPfJZALV5xezFypqLolvN27MH/6LsK/OBtVkol8FYsWMEMBSxWGhPP83NTZbavpOpSfRqP1VfWqoZw1YlUGgmMYdcS+OBJMDykMQ/k8L0D6Y32I60fVkD2z+o3LMNETJpLTo9aiKAOAAe4jKIKrNUjg/dvHJP15QPLm7q+xWJq2BjAYoScl2BlWShUgDHefT2rvPt15XUJFaio95H3rASYCBgtIbdLvHQywQNQAZBobSqd1hp0AVPJhlvbDUfpmtSODBlAKkhzNNvrVmq0ob4ALgGQrRca31RtCsMa0oAdqzaZo4UTJaNpctSpJd4dYKFCgMmgyBbyK7IbNoOCtgr+aSFKGUilSWxJASwZQTcANUu1NesgF3twmLklkDkEtWQF/96FYsgNwBgcPXUxZeSFBx06SLBtJOide5ILZQyIA0obkLEFo4mP3xmNTSZOJvv9pJWICVdCwOeNUknvQKuDGnOrt16cLM6ZyiuwHAyl4LUNF6WqmgAkeyqmsMLAMABlAgCuRRopTSlkiYN+BooOGfLC/Vq5tjMp1Iz3zbXQQSdnBw1ABqNyswD+a4uOECw0mWkqZI4D2mWodFCMr+8lnxwi/fJNpZQIoWJE7/WimKFmhCOIQR4Y4BMPotVHG8f3LkDVFgPB7vicAGqmqRN0tJiA9UQNuwhjOzMrsZatm7tZSKKo7j+YNg1CPVGkpjTgaUO6xUsBgDBhAFqM6c9Eeno2tLgKaiOc6NykRBXkaTxDCVO+FdqNbmpwgbwQkcB+CQtWQ1lXgfiAEI2CWpSK5KMW9Cl9hllEKflxAvxqloVMpmSKkPJJs8mn8YpAlYCI2RfqbruTcM7VR/6GYxBEp5+jZhooglZqpyNYRsA+9QaXt4TJSI+39sHlM9+iohq09N77GrdpUyGlycpkoFzSgmGpIUWadOdqiIILTC4bjXli2Kh6Mkko62t8iVReo2FMkgCUidqMz6P2swwAdoOTvqqBaw6zjgIVf32LV0DxfVOKwKKW1wgaDkXbq3VIpvrz2KVoQQkGoMVNzbz5VRlGmVbYwGsroCDQgZgxmX87fLh42RwhgiIFrVSPtG2qcOrFvD09LChCUhcOX9Xz2D/DVKv+4SITkiEhB4ksCaN6CAD4XCV700ehHAeCgav6INuCTYRuqR5sYXn/GqfN7DPAxKmUxQtOduUs0/7swnkoypB3TZV5XJ5g64BE52csuj5QzXMX9QQmXThAqJmaqrTiFoUsCGCfM8yd7xakGA9vGSSGaW02J/0SjBABmSaYFOHagjNXreKaVs65SDrgKgHLAZKPt2PPKAFkIlBpgkKyNQuzsFI5hMACrt3T1z1WGnbfHAQCi/3kl86olhuo9BLFL83q397kyilvVitOO4leqQ1Cb6IVn89BgzoC6uRrTUJkA4HMAEk0kCbos+2vdncxRmBRFgmW8GXLZFagr5G96wqAE8r25suc8Zpnk4v4ZNXQ38B5EoCJk24Ub10+FcIO5lP9oiajbVV8FdVAiOXEOe04teurN4Akk4UXJNbsYmTIAu4RJvqpTVdOmsM0DW4wtlyHtmQVBOiRV94tkjBBEAUIu0rsNmrFSwRxar3Fbp6N0w0TiwgS8ZiZe+R+hWRrQLMMEH+GsiXASakafjK8sLyvipWXYEvjdXU+YlocWGWM0GvauMFtqxlpj0MRyDfvorhVWrwCvvXXMqRj9Lu/dT8LeehLdpfEm0JelY5xALIGijTsubyCsuYTHHKpdBgNdcxNuYxBab8nQ8vnj971OazBqRC+kK3kfjhkBoI3HyLcF07PlipKUmtdaUXTMJ/peTeKiW9lj5YldPrCUnTNKQ1Lippt+eKtGm116PjTGEQQAXL1yaucBeJnBXtpn3aJmBxi1ByLwhoXmLbiRSZUFZ5PwnMWVnWEn4ZJoRfYa1tXhBNSDafUyggKpd48dZyRAEhqACNWg3AzFoS8AWA01GRF4xIrtxzFQUyAYFMfrX0Ns0bvffuaGCDtMLwSnpOIIW/JmaFWpxeMl1IL3HodG1q8CHYRhUhBC9eYXrTm5KE2S7TuDB/EgF9TcfBr3TJ9uvbP9KU367Vz53/VG9pCE6dF3ZQRFCuA6YOcIxAmzDcRIMjxHkqXQs1Zs0lMQitDKzS85deBGNIwG4JFy6sJQ2+MAMbNV/6l2lyOagKqQ3zXJ8rnyP6ocPYCVqtz/0FgGLQl4W3IHiQCMgHy5aEfAhyAdiFEoS9iJ3sAxBdyaelXRnS4h+FSC6juZyTTu8ZgBCDSEBSWVsm+sJlacgrRhowNgiuxSeAcVRXeI/AEYwLQZIF+Szgs8l0g+8Bol5fzF6H+ccPfYaImgdxyK7mpWSt65pUL5F7ujwn1Yr2khLmmjLRgwBEfFIKU0BVoPKCIEKTHJgDo6upuZcemFFIxqvPeQ/rHcfek/NCznuOPVi8GKZGddEP7HjnR1U1sxM7VvVzFNgYoLU3reycWveEEJhMcncXtW8JbaNwpJUCKV5Mo17TD1hNsuu6LYWFwrCJMxtNGMYQGwFUBzFBJQeSEM4FJjswiHNLc4/2ANH08Fm7iyhePbPSStloRUPxyn5tQev6pzUl4IOHDmIDRSgAgAiIL03PgSxUDJgF8Ej64VdTvCN73Pj4GY6QnTrXGL4rO/QjmyrNetptXgcMQSULKxYq4npKN9q+TN8TRKT79o2v7jGkpF2ISKBwiT/GSoVIlCSOHWZmLqwdAc8AGBKfEgk+PaV+OTVQJLe5LvOGq5qJJDZvYgKzAH72Sn5291Vc5fSa/aEkM8mXUsrW/7mUXqpqu2KsNn7EOydJ+kr3cYlw1dXgVl4lnlPC1NgLLhebujyqbX03eq0+vJkTrdU0ktYw4erVJ6OtGqQmun171BYBJ80usSPSOK2uU9IDBQAGrAZCEAgLGXbXQsCpJr9Mnn0tP1xupYUmBw9HCg8hJbVWxTsCK0tqw4WIIK5dlq4tAjbBJhK7qQdhDMR1gOWSD4YFYGDBQL6IRrl34JLuvDEb/UahiYEB23ujDRpZq1JFZa7hi4PrLDhOtNmHgA3hm8M9RrK0ZgS8/Qdvjw5Nlz9XrnZls1JVr5fH+QyCGiNFzvGS9pwEgL0Hd+j3imBb77okW77YjAubL5YHfVg0G4becf1Pnzx++AuisU92iTWWkKRwU2P7D9weoYM3MwxUj4ys9lPaFtMeOHBf8GpXD4wA2F/eoKsdra5V6L5xm94GiJFd9zsCVPe9306/xF3Zu3bdH3eU4M0sbAWpTprOTnTQQQcddNBBBx100EEHHXTQQQcddNBBBx100EEHHXTQQQcddNBBBx100EEHHbx58P8BQwiWV2lXaSMAAAAASUVORK5CYII=";
+
+async function hashValue(v) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(v));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,"0")).join("");
+}
+
+// ── SUPABASE DATA LAYER ───────────────────────────────────────────────────────
+async function dbGetConfig() {
+  const { data } = await supabase.from("config").select("*").eq("id",1).single();
+  return data;
+}
+async function dbSaveConfig(cfg) {
+  const { criteria, restaurants, ...rest } = cfg;
+  await supabase.from("config").upsert({
+    id:1,
+    title: rest.title,
+    subtitle: rest.subtitle,
+    reglement: rest.reglement,
+    hidden: rest.hidden,
+    end_date: rest.endDate||"",
+    restaurants: restaurants||["Decize","Avermes","Moulins"],
+    criteria: criteria||[],
+  });
+}
+async function dbGetParticipants() {
+  const { data } = await supabase.from("participants").select("*").order("updated_at",{ascending:false});
+  return (data||[]).map(p => ({
+    id: p.id,
+    name: p.name,
+    restaurant: p.restaurant,
+    scores: p.scores||{},
+    notes: p.notes||{},
+    updatedAt: new Date(p.updated_at).getTime(),
+  }));
+}
+async function dbSaveParticipant(p) {
+  await supabase.from("participants").upsert({
+    id: p.id,
+    name: p.name,
+    restaurant: p.restaurant||null,
+    scores: p.scores||{},
+    notes: p.notes||{},
+    updated_at: new Date().toISOString(),
+  });
+}
+async function dbDeleteParticipant(id) {
+  await supabase.from("participants").delete().eq("id",id);
+}
+async function dbGetAuth() {
+  const { data } = await supabase.from("auth_config").select("*").eq("id",1).single();
+  return data ? {
+    pinHash: data.pin_hash,
+    passwordHash: data.password_hash,
+    attempts: data.attempts||0,
+    lockedUntil: data.locked_until||null,
+  } : null;
+}
+async function dbSaveAuth(auth) {
+  await supabase.from("auth_config").upsert({
+    id:1,
+    pin_hash: auth.pinHash,
+    password_hash: auth.passwordHash,
+    attempts: auth.attempts||0,
+    locked_until: auth.lockedUntil||null,
+  });
+}
+async function dbAddLog(msg) {
+  await supabase.from("historique").insert({ message: msg });
+}
+async function dbGetLog() {
+  const { data } = await supabase.from("historique").select("*").order("created_at",{ascending:false}).limit(50);
+  return (data||[]).map(l => ({ ts: new Date(l.created_at).getTime(), msg: l.message }));
+}
+function computeTotal(p, criteria) {
+  return criteria.reduce((s, c) => s + (parseFloat(p.scores?.[c.id] ?? 0) / (parseFloat(c.max) || 1)) * parseFloat(c.weight || 0), 0);
+}
+function fmtDate(ts) {
+  if (!ts) return null;
+  return new Date(ts).toLocaleString("fr-FR", { day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit" });
+}
+
+function Countdown({ target }) {
+  const [secs, setSecs] = useState(Math.max(0, Math.ceil((target - Date.now()) / 1000)));
+  useEffect(() => {
+    const iv = setInterval(() => {
+      const r = Math.max(0, Math.ceil((target - Date.now()) / 1000));
+      setSecs(r);
+      if (!r) clearInterval(iv);
+    }, 1000);
+    return () => clearInterval(iv);
+  }, [target]);
+  if (!secs) return null;
+  const d = Math.floor(secs / 86400), h = Math.floor((secs % 86400) / 3600), m = Math.floor((secs % 3600) / 60), s = secs % 60;
+  return (
+    <div style={mc.countdown}>
+      <div style={mc.countdownLabel}>⏳ Fin du concours dans</div>
+      <div style={mc.countdownRow}>
+        {d > 0 && <><span style={mc.countdownNum}>{d}</span><span style={mc.countdownUnit}>j</span></>}
+        <span style={mc.countdownNum}>{String(h).padStart(2,"0")}</span><span style={mc.countdownUnit}>h</span>
+        <span style={mc.countdownNum}>{String(m).padStart(2,"0")}</span><span style={mc.countdownUnit}>m</span>
+        <span style={mc.countdownNum}>{String(s).padStart(2,"0")}</span><span style={mc.countdownUnit}>s</span>
+      </div>
+    </div>
+  );
+}
+
+// ── MAIN APP ─────────────────────────────────────────────────────────────────
+export default function App() {
+  const [view, setView]               = useState("public");
+  const [auth, setAuth]               = useState(null);
+  const [ready, setReady]             = useState(false);
+  const [config, setConfig]           = useState({ title:"Mon Concours", subtitle:"", criteria:[], reglement:"", hidden:false, endDate:"", restaurants:["Decize","Avermes","Moulins"] });
+  const [participants, setParticipants] = useState([]);
+  const [log, setLog]                 = useState([]);
+  const logoutTimer                   = useRef(null);
+
+  useEffect(() => {
+    async function init() {
+      try {
+        const [a, c, p, l] = await Promise.all([
+          dbGetAuth(),
+          dbGetConfig(),
+          dbGetParticipants(),
+          dbGetLog(),
+        ]);
+        // Auth init
+        let fa = a;
+        if (!fa?.pinHash) {
+          const [ph, pwh] = await Promise.all([hashValue(DEFAULT_PIN), hashValue(DEFAULT_PASSWORD)]);
+          fa = { pinHash:ph, passwordHash:pwh, attempts:0, lockedUntil:null };
+          await dbSaveAuth(fa);
+        }
+        setAuth(fa);
+        // Config
+        if (c) {
+          setConfig({
+            title: c.title||"Mon Concours",
+            subtitle: c.subtitle||"",
+            criteria: c.criteria||[],
+            reglement: c.reglement||"",
+            hidden: c.hidden||false,
+            endDate: c.end_date||"",
+            restaurants: c.restaurants||["Decize","Avermes","Moulins"],
+          });
+        }
+        setParticipants(p||[]);
+        setLog(l||[]);
+      } catch(e) {
+        console.error("Init error:", e);
+      }
+      setReady(true);
+    }
+    init();
+
+    // ── REALTIME SUBSCRIPTIONS ────────────────────────────────────────────────
+    const chanParticipants = supabase
+      .channel("participants-live")
+      .on("postgres_changes", { event:"*", schema:"public", table:"participants" }, async () => {
+        const p = await dbGetParticipants();
+        setParticipants(p);
+      })
+      .subscribe();
+
+    const chanConfig = supabase
+      .channel("config-live")
+      .on("postgres_changes", { event:"*", schema:"public", table:"config" }, async () => {
+        const c = await dbGetConfig();
+        if (c) setConfig({
+          title: c.title||"Mon Concours",
+          subtitle: c.subtitle||"",
+          criteria: c.criteria||[],
+          reglement: c.reglement||"",
+          hidden: c.hidden||false,
+          endDate: c.end_date||"",
+          restaurants: c.restaurants||["Decize","Avermes","Moulins"],
+        });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(chanParticipants);
+      supabase.removeChannel(chanConfig);
+    };
+  }, []);
+
+  const addLog = useCallback(async (msg) => {
+    await dbAddLog(msg);
+    const l = await dbGetLog();
+    setLog(l);
+  }, []);
+
+  const resetLogoutTimer = useCallback(() => {
+    if (logoutTimer.current) clearTimeout(logoutTimer.current);
+    logoutTimer.current = setTimeout(() => setView("public"), AUTO_LOGOUT_MS);
+  }, []);
+
+  useEffect(() => {
+    if (view === "admin") resetLogoutTimer();
+    else if (logoutTimer.current) clearTimeout(logoutTimer.current);
+  }, [view, resetLogoutTimer]);
+
+  const ranked = [...participants]
+    .map(p => ({ ...p, total: computeTotal(p, config.criteria) }))
+    .sort((a, b) => b.total - a.total);
+
+  if (!ready) return (
+    <div style={{ background:"#FFF8E7", minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center" }}>
+      <div style={{ textAlign:"center" }}>
+        <div style={{ fontSize:48, marginBottom:16 }}>🍔</div>
+        <p style={{ color:"#DA291C", fontWeight:700, fontSize:18 }}>Chargement en cours…</p>
+      </div>
+    </div>
+  );
+
+  if (view === "pingate") return (
+    <AuthGate auth={auth} setAuth={setAuth}
+      onSuccess={() => { setView("admin"); resetLogoutTimer(); }}
+      onBack={() => setView("public")} />
+  );
+  if (view === "admin") return (
+    <AdminView config={config} setConfig={setConfig}
+      participants={participants} setParticipants={setParticipants}
+      ranked={ranked} auth={auth} setAuth={setAuth}
+      log={log} addLog={addLog}
+      onBack={() => { setView("public"); if (logoutTimer.current) clearTimeout(logoutTimer.current); }}
+      resetLogoutTimer={resetLogoutTimer} />
+  );
+  return <PublicView config={config} ranked={ranked} participants={participants} onAdminClick={() => setView("pingate")} />;
+}
+
+// ── PUBLIC VIEW ───────────────────────────────────────────────────────────────
+function PublicView({ config, ranked, participants, onAdminClick }) {
+  const [tab, setTab] = useState("classement");
+  const podiumColors = [
+    { bar:"linear-gradient(180deg,#C0C0C0,#a0a0a0)", base:"#C0C0C0", text:"#333" },
+    { bar:"linear-gradient(180deg,#FFC72C,#ff9800)", base:"#FFC72C", text:"#1a1a1a" },
+    { bar:"linear-gradient(180deg,#cd7f32,#a0522d)", base:"#cd7f32", text:"#fff" },
+  ];
+  const endTs = config.endDate ? new Date(config.endDate).getTime() : null;
+
+  return (
+    <div style={mc.page}>
+      <div style={mc.bgLeft}/><div style={mc.bgRight}/>
+      <header style={mc.header}>
+        <div style={mc.headerStripe}/>
+        <div style={mc.headerContent}>
+          <div style={mc.logoWrap}>
+            <span style={{ background:"#006B2D", borderRadius:14, padding:"8px 10px", display:"inline-flex", alignItems:"center", justifyContent:"center" }}>
+              <img src={LOGO_SRC} alt="M" style={{ width:54, height:54, objectFit:"contain" }}/>
+            </span>
+          </div>
+          <div style={mc.headerText}>
+            <h1 style={mc.mainTitle}>{config.title || "Manager Challenge"}</h1>
+            {config.subtitle && <p style={mc.mainSubtitle}>{config.subtitle}</p>}
+          </div>
+          <button style={mc.adminBtn} onClick={onAdminClick} title="Admin">⚙</button>
+        </div>
+        <div style={mc.publicTabBar}>
+          {["classement","restaurants","reglement"].map(t => (
+            <button key={t} style={{ ...mc.publicTab, ...(tab===t ? mc.publicTabActive : {}) }} onClick={() => setTab(t)}>
+              {t === "classement" ? "🏆 Classement" : t === "restaurants" ? "🍔 Restaurants" : "📋 Règlement"}
+            </button>
+          ))}
+        </div>
+        <div style={mc.headerStripeBottom}/>
+      </header>
+
+      {tab === "restaurants" ? (
+        <RestaurantsView config={config} participants={participants} ranked={ranked} />
+      ) : tab === "reglement" ? (        <div style={mc.reglementPage}>
+          <div style={mc.reglementTitleBar}><span>📋</span><span>Règlement du concours</span></div>
+          {config.reglement ? (
+            <div style={mc.reglementContent}>
+              {config.reglement.split("\n").map((line, i) =>
+                line.trim() === "" ? <br key={i}/> : <p key={i} style={mc.reglementPara}>{line}</p>
+              )}
+            </div>
+          ) : (
+            <div style={mc.reglementEmpty}><span style={{ fontSize:40 }}>📄</span><p>Le règlement n'a pas encore été publié.</p></div>
+          )}
+        </div>
+      ) : (
+        <>
+          {endTs && endTs > Date.now() && <Countdown target={endTs}/>}
+
+          {config.hidden ? (
+            <div style={mc.empty}>
+              <div style={{ fontSize:52 }}>🔒</div>
+              <p style={{ color:"#DA291C", fontWeight:700, fontSize:18 }}>Les résultats sont temporairement masqués</p>
+              <p style={{ color:"#c0a060", fontSize:14 }}>Revenez bientôt !</p>
+            </div>
+          ) : config.criteria.length === 0 || ranked.length === 0 ? (
+            <div style={mc.empty}>
+              <div style={{ fontSize:56 }}>🍔</div>
+              <p style={{ color:"#FFC72C", fontWeight:700, fontSize:18 }}>Le classement arrive bientôt !</p>
+              <p style={{ color:"#c0a060", fontSize:14 }}>La compétition n'a pas encore démarré.</p>
+            </div>
+          ) : (
+            <>
+              {ranked.length >= 1 && (
+                <div style={mc.podiumSection}>
+                  <div style={mc.podiumLabel}>— TOP 3 —</div>
+                  <div style={mc.podiumWrap}>
+                    {[ranked[1], ranked[0], ranked[2]].map((p, i) => {
+                      if (!p) return <div key={i} style={{ width:130 }}/>;
+                      const rk = ranked.indexOf(p);
+                      const heights = [120,160,96];
+                      const col = podiumColors[i];
+                      return (
+                        <div key={p.id} style={mc.podiumCol}>
+                          <div style={mc.podiumAvatar}>{MEDAL[rk]}</div>
+                          <div style={mc.podiumName}>{p.name}</div>
+                          <div style={{ ...mc.podiumBar, height:heights[i], background:col.bar }}>
+                            <span style={mc.podiumScore}>{p.total.toFixed(1)}</span>
+                          </div>
+                          <div style={{ ...mc.podiumBase, background:col.base, color:col.text }}>{[2,1,3][i]}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              <div style={mc.tableSection}>
+                <div style={mc.tableTitleBar}>
+                  <span style={mc.tableTitleIcon}>📋</span>
+                  <span>Classement Complet</span>
+                </div>
+                <div style={mc.tableWrap}>
+                  <table style={mc.table}>
+                    <thead>
+                      <tr>
+                        <th style={{ ...mc.th, width:52 }}>#</th>
+                        <th style={mc.th}>Participant</th>
+                        {config.criteria.map(c => <th key={c.id} style={mc.th}>{c.name}</th>)}
+                        <th style={{ ...mc.th, ...mc.thTotal }}>SCORE</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ranked.map((p, i) => (
+                        <tr key={p.id} style={{ ...mc.tr, ...(i===0?mc.trGold:i===1?mc.trSilver:i===2?mc.trBronze:{}) }}>
+                          <td style={{ ...mc.td, fontWeight:800, fontSize:20, textAlign:"center" }}>{MEDAL[i] || <span style={{ color:"#888", fontSize:15 }}>#{i+1}</span>}</td>
+                          <td style={{ ...mc.td, fontWeight:700, fontSize:15 }}>{p.name}</td>
+                          {config.criteria.map(c => (
+                            <td key={c.id} style={mc.td}>
+                              <span style={{ fontWeight:600, color:"#1a1a1a" }}>{p.scores?.[c.id] ?? "—"}</span>
+                              {p.notes?.[c.id] && <div style={mc.noteText}>{p.notes[c.id]}</div>}
+                            </td>
+                          ))}
+                          <td style={{ ...mc.td, ...mc.tdTotal }}>{p.total.toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div style={mc.baremeSection}>
+                <div style={mc.baremeTitleBar}>📊 Barème de notation</div>
+                <div style={mc.baremeGrid}>
+                  {config.criteria.map(c => (
+                    <div key={c.id} style={mc.baremeCard}>
+                      <div style={mc.baremeCardTitle}>{c.name}</div>
+                      <div style={mc.baremeCardDetails}>
+                        <span style={mc.baremeTag}>max {c.max} pts</span>
+                        <span style={mc.baremeTag}>× {c.weight}</span>
+                      </div>
+                      {c.description && <p style={mc.baremeCardDesc}>{c.description}</p>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {ranked[0] && <div style={mc.lastUpdate}>Dernière mise à jour : {fmtDate(ranked[0]?.updatedAt || Date.now())}</div>}
+            </>
+          )}
+        </>
+      )}
+      <div style={mc.footer}><div style={mc.footerStripe}/></div>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap');`}</style>
+    </div>
+  );
+}
+
+// ── RESTAURANTS VIEW ──────────────────────────────────────────────────────────
+function RestaurantsView({ config, participants, ranked }) {
+  const restaurants = config.restaurants || [];
+  const podiumColors = [
+    { bar:"linear-gradient(180deg,#FFD700,#ff9800)", base:"#FFD700", text:"#1a1a1a" },
+    { bar:"linear-gradient(180deg,#C0C0C0,#a0a0a0)", base:"#C0C0C0", text:"#333" },
+    { bar:"linear-gradient(180deg,#cd7f32,#a0522d)", base:"#cd7f32", text:"#fff" },
+  ];
+
+  // Compute score per restaurant = sum of all participant totals
+  const restaurantScores = restaurants.map(name => {
+    const members = participants.filter(p => p.restaurant === name);
+    const total   = members.reduce((sum, p) => sum + (ranked.find(r => r.id===p.id)?.total || 0), 0);
+    return { name, total: parseFloat(total.toFixed(2)), members };
+  }).sort((a, b) => b.total - a.total);
+
+  return (
+    <div style={{ position:"relative", zIndex:1, paddingBottom:32 }}>
+      {/* Podium restaurants */}
+      <div style={mc.podiumSection}>
+        <div style={mc.podiumLabel}>— CLASSEMENT RESTAURANTS —</div>
+        <div style={mc.podiumWrap}>
+          {[restaurantScores[1], restaurantScores[0], restaurantScores[2]].map((r, i) => {
+            if (!r) return <div key={i} style={{ width:110 }}/>;
+            const realRank = restaurantScores.indexOf(r);
+            const heights  = [120,160,96];
+            const col      = podiumColors[i];
+            return (
+              <div key={r.name} style={mc.podiumCol}>
+                <div style={mc.podiumAvatar}>{MEDAL[realRank]}</div>
+                <div style={mc.podiumName}>{r.name}</div>
+                <div style={{ ...mc.podiumBar, height:heights[i], background:col.bar }}>
+                  <span style={mc.podiumScore}>{r.total.toFixed(1)}</span>
+                </div>
+                <div style={{ ...mc.podiumBase, background:col.base, color:col.text }}>{[2,1,3][i]}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Detail cards per restaurant */}
+      <div style={{ margin:"28px 16px 0", display:"flex", flexDirection:"column", gap:16 }}>
+        {restaurantScores.map((r, i) => (
+          <div key={r.name} style={{ background:"#fff", border:`2px solid ${["#FFD700","#C0C0C0","#cd7f32"][i]||"#e0e0e0"}`, borderRadius:12, overflow:"hidden" }}>
+            {/* Header */}
+            <div style={{ background:["#FFD700","#C0C0C0","#cd7f32"][i]||"#e0e0e0", padding:"10px 18px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                <span style={{ fontSize:22 }}>{MEDAL[i]||`#${i+1}`}</span>
+                <span style={{ fontWeight:800, fontSize:16, color:"#1a1a1a" }}>{r.name}</span>
+              </div>
+              <span style={{ fontWeight:900, fontSize:20, color:"#DA291C" }}>{r.total.toFixed(2)} pts</span>
+            </div>
+            {/* Members */}
+            <div style={{ padding:"12px 18px" }}>
+              {r.members.length === 0 ? (
+                <p style={{ color:"#aaa", fontSize:13, fontStyle:"italic" }}>Aucun participant assigné</p>
+              ) : (
+                <table style={{ width:"100%", borderCollapse:"collapse", fontSize:13 }}>
+                  <thead>
+                    <tr>
+                      <th style={{ textAlign:"left", padding:"4px 8px", color:"#DA291C", fontWeight:700, borderBottom:"1px solid #f0e0c0" }}>Participant</th>
+                      <th style={{ textAlign:"right", padding:"4px 8px", color:"#DA291C", fontWeight:700, borderBottom:"1px solid #f0e0c0" }}>Score</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {r.members
+                      .map(m => ({ ...m, total: ranked.find(rk => rk.id===m.id)?.total || 0 }))
+                      .sort((a,b) => b.total - a.total)
+                      .map((m, j) => (
+                        <tr key={m.id} style={{ borderBottom:"1px solid #f9f0e0" }}>
+                          <td style={{ padding:"6px 8px", color:"#1a1a1a", fontWeight:600 }}>
+                            {MEDAL[j] || `#${j+1}`} {m.name}
+                          </td>
+                          <td style={{ padding:"6px 8px", textAlign:"right", fontWeight:700, color:"#DA291C" }}>
+                            {m.total.toFixed(2)}
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── AUTH GATE ─────────────────────────────────────────────────────────────────
+function AuthGate({ auth, setAuth, onSuccess, onBack }) {
+  const [step, setStep]       = useState("pin");
+  const [pin, setPin]         = useState("");
+  const [pwd, setPwd]         = useState("");
+  const [showPwd, setShowPwd] = useState(false);
+  const [err, setErr]         = useState("");
+  const [shake, setShake]     = useState(false);
+  const [cd, setCd]           = useState(0);
+
+  useEffect(() => {
+    if (!auth?.lockedUntil) return;
+    const iv = setInterval(() => {
+      const r = Math.max(0, Math.ceil((auth.lockedUntil - Date.now()) / 1000));
+      setCd(r);
+      if (!r) clearInterval(iv);
+    }, 1000);
+    setCd(Math.max(0, Math.ceil((auth.lockedUntil - Date.now()) / 1000)));
+    return () => clearInterval(iv);
+  }, [auth?.lockedUntil]);
+
+  const locked   = auth?.lockedUntil && Date.now() < auth.lockedUntil;
+  const left     = MAX_ATTEMPTS - (auth?.attempts || 0);
+
+  function trig(msg) { setErr(msg); setShake(true); setTimeout(() => setShake(false), 500); }
+
+  async function checkPin(val) {
+    const h = await hashValue(val);
+    if (h === auth.pinHash) { setErr(""); setStep("password"); setPin(""); }
+    else {
+      const na = (auth.attempts || 0) + 1, lk = na >= MAX_ATTEMPTS;
+      const newA1 = { ...auth, attempts: lk ? 0 : na, lockedUntil: lk ? Date.now() + LOCKOUT_MS : null };
+      setAuth(newA1); dbSaveAuth(newA1);
+      setPin("");
+      trig(lk ? "Accès bloqué 5 minutes." : `PIN incorrect. ${MAX_ATTEMPTS - na} essai(s) restant(s).`);
+    }
+  }
+  async function checkPwd() {
+    const h = await hashValue(pwd);
+    if (h === auth.passwordHash) { const newA3={...auth,attempts:0,lockedUntil:null}; setAuth(newA3); dbSaveAuth(newA3); setPwd(""); onSuccess(); }
+    else {
+      const na = (auth.attempts || 0) + 1, lk = na >= MAX_ATTEMPTS;
+      const newA2 = { ...auth, attempts: lk ? 0 : na, lockedUntil: lk ? Date.now() + LOCKOUT_MS : null };
+      setAuth(newA2); dbSaveAuth(newA2);
+      setPwd("");
+      trig(lk ? "Accès bloqué 5 minutes." : `Mot de passe incorrect. ${MAX_ATTEMPTS - na} essai(s) restant(s).`);
+    }
+  }
+
+  return (
+    <div style={s.pinPage}>
+      <div style={{ ...s.pinBox, animation: shake ? "shake 0.4s" : "none" }}>
+        <div style={s.stepBar}>
+          <div style={{ ...s.stepDot, background:"#FFD700" }}>1</div>
+          <div style={{ ...s.stepLine, background: step==="password" ? "#FFD700" : "rgba(255,255,255,0.15)" }}/>
+          <div style={{ ...s.stepDot, background: step==="password" ? "#FFD700" : "rgba(255,255,255,0.15)", color: step==="password" ? "#0a0e1a" : "#6b7280" }}>2</div>
+        </div>
+        <p style={s.stepLabel}>{step === "pin" ? "Étape 1/2 — Code PIN" : "Étape 2/2 — Mot de passe"}</p>
+        <div style={{ fontSize:36 }}>{step === "pin" ? "🔢" : "🔑"}</div>
+        <h2 style={s.pinTitle}>Accès Administrateur</h2>
+
+        {locked ? (
+          <div style={s.lockoutBox}>
+            <div style={{ fontSize:40 }}>🔒</div>
+            <p style={{ color:"#f87171", fontWeight:700, margin:"8px 0 4px" }}>Accès bloqué</p>
+            <p style={{ color:"#9ca3af", fontSize:13 }}>Réessayez dans <strong style={{ color:"#FFD700" }}>{Math.floor(cd/60)}:{String(cd%60).padStart(2,"0")}</strong></p>
+          </div>
+        ) : step === "pin" ? (
+          <>
+            <p style={s.pinSub}>Code PIN à 4 chiffres</p>
+            <div style={s.pinDots}>
+              {[0,1,2,3].map(i => <div key={i} style={{ ...s.pinDot, background: pin.length > i ? "#FFD700" : "rgba(255,255,255,0.15)" }}/>)}
+            </div>
+            <div style={s.pinGrid}>
+              {[1,2,3,4,5,6,7,8,9,"",0,"⌫"].map((k, i) => (
+                <button key={i} style={k==="" ? { visibility:"hidden" } : s.pinKey}
+                  onClick={async () => {
+                    if (k === "⌫") { setPin(p => p.slice(0,-1)); setErr(""); }
+                    else if (typeof k === "number" && pin.length < 4) {
+                      const nx = pin + k; setPin(nx);
+                      if (nx.length === 4) await checkPin(nx);
+                    }
+                  }}>{k}</button>
+              ))}
+            </div>
+          </>
+        ) : (
+          <>
+            <p style={s.pinSub}>Mot de passe administrateur</p>
+            <div style={s.passwordWrap}>
+              <input type={showPwd ? "text" : "password"} style={s.passwordInput} autoFocus
+                placeholder="Mot de passe" value={pwd}
+                onChange={e => { setPwd(e.target.value); setErr(""); }}
+                onKeyDown={e => e.key === "Enter" && checkPwd()}/>
+              <button style={s.eyeBtn} onClick={() => setShowPwd(v => !v)}>{showPwd ? "🙈" : "👁"}</button>
+            </div>
+            <div style={{ display:"flex", gap:10, marginTop:14 }}>
+              <button style={s.pinCancel} onClick={() => { setStep("pin"); setPwd(""); setErr(""); }}>← PIN</button>
+              <button style={s.pinSubmit} onClick={checkPwd}>Valider</button>
+            </div>
+          </>
+        )}
+        {err && <p style={s.pinError}>{err}</p>}
+        {!err && (auth?.attempts||0) > 0 && !locked && <p style={{ ...s.pinError, color:"#fb923c" }}>⚠ {left} essai(s) avant blocage</p>}
+        <button style={{ ...s.pinCancel, marginTop:14 }} onClick={onBack}>Annuler</button>
+      </div>
+      <style>{`@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}`}</style>
+    </div>
+  );
+}
+
+// ── ADMIN VIEW ────────────────────────────────────────────────────────────────
+function AdminView({ config, setConfig, participants, setParticipants, ranked, auth, setAuth, log, addLog, onBack, resetLogoutTimer }) {
+  const [tab, setTab]         = useState("participants");
+  const [editP, setEditP]     = useState(null);
+  const [newName, setNewName] = useState("");
+  const [newPin, setNewPin]   = useState("");
+  const [newPwd, setNewPwd]   = useState("");
+  const [newPwdC, setNewPwdC] = useState("");
+  const [showNP, setShowNP]   = useState(false);
+  const [pinMsg, setPinMsg]   = useState("");
+  const [pwdMsg, setPwdMsg]   = useState("");
+  const [dragIdx, setDragIdx] = useState(null);
+
+  const act = fn => (...a) => { resetLogoutTimer(); fn(...a); };
+  // Debounced config save
+  const configSaveTimer = useRef(null);
+  const saveConfigDebounced = useCallback((newConfig) => {
+    if (configSaveTimer.current) clearTimeout(configSaveTimer.current);
+    configSaveTimer.current = setTimeout(() => dbSaveConfig(newConfig), 600);
+  }, []);
+
+  async function addParticipant() {
+    if (!newName.trim()) return;
+    const newP = { id: crypto.randomUUID(), name:newName.trim(), scores:{}, notes:{}, updatedAt:Date.now() };
+    await dbSaveParticipant(newP);
+    addLog("Participant ajouté : " + newName.trim());
+    setNewName("");
+  }
+  async function removeParticipant(id, name) {
+    await dbDeleteParticipant(id);
+    if (editP?.id === id) setEditP(null);
+    addLog("Participant supprimé : " + name);
+  }
+  async function updateScore(pid, cid, val) {
+    const updated = participants.find(p=>p.id===pid);
+    if (!updated) return;
+    const newP = { ...updated, scores:{...updated.scores,[cid]:val}, updatedAt:Date.now() };
+    setEditP(ep => ep?.id===pid ? { ...ep, scores:{...ep.scores,[cid]:val} } : ep);
+    await dbSaveParticipant(newP);
+  }
+  async function updateNote(pid, cid, val) {
+    const updated = participants.find(p=>p.id===pid);
+    if (!updated) return;
+    const newP = { ...updated, notes:{...(updated.notes||{}),[cid]:val} };
+    setEditP(ep => ep?.id===pid ? { ...ep, notes:{...(ep.notes||{}),[cid]:val} } : ep);
+    await dbSaveParticipant(newP);
+  }
+  function addCriterion() {
+    setConfig(c => { const n={...c,criteria:[...c.criteria,{id:Date.now().toString(),name:"Nouveau critère",max:10,weight:1,description:""}]}; saveConfigDebounced(n); return n; });
+  }
+  function updCrit(id, f, v) { setConfig(c => { const n={...c,criteria:c.criteria.map(cr=>cr.id===id?{...cr,[f]:v}:cr)}; saveConfigDebounced(n); return n; }); }
+  function delCrit(id) { setConfig(c => { const n={...c,criteria:c.criteria.filter(cr=>cr.id!==id)}; saveConfigDebounced(n); return n; }); }
+
+  function onDragStart(i) { setDragIdx(i); }
+  function onDragOver(e, i) {
+    e.preventDefault();
+    if (dragIdx === null || dragIdx === i) return;
+    const cr = [...config.criteria]; const [m] = cr.splice(dragIdx, 1); cr.splice(i, 0, m);
+    setConfig(c => { const n={...c,criteria:cr}; saveConfigDebounced(n); return n; }); setDragIdx(i);
+  }
+  function onDragEnd() { setDragIdx(null); }
+
+  async function savePin() {
+    if (!/^\d{4}$/.test(newPin)) { setPinMsg("❌ 4 chiffres requis."); return; }
+    const h = await hashValue(newPin);
+    const newAuth = { ...auth, pinHash:h, attempts:0, lockedUntil:null };
+    setAuth(newAuth);
+    await dbSaveAuth(newAuth);
+    setNewPin(""); setPinMsg("✅ PIN mis à jour !"); addLog("PIN modifié");
+    setTimeout(() => setPinMsg(""), 2500);
+  }
+  async function savePwd() {
+    if (newPwd.length < 8) { setPwdMsg("❌ Minimum 8 caractères."); return; }
+    if (newPwd !== newPwdC) { setPwdMsg("❌ Les mots de passe ne correspondent pas."); return; }
+    const h = await hashValue(newPwd);
+    const newAuth = { ...auth, passwordHash:h, attempts:0, lockedUntil:null };
+    setAuth(newAuth);
+    await dbSaveAuth(newAuth);
+    setNewPwd(""); setNewPwdC(""); setPwdMsg("✅ Mot de passe mis à jour !"); addLog("Mot de passe modifié");
+    setTimeout(() => setPwdMsg(""), 2500);
+  }
+  function exportPDF() {
+    const rows = ranked.map((p,i) => `<tr><td>${MEDAL[i]||"#"+(i+1)}</td><td>${p.name}</td>${config.criteria.map(c=>`<td>${p.scores?.[c.id]??"—"}</td>`).join("")}<td><strong>${p.total.toFixed(2)}</strong></td></tr>`).join("");
+    const ths  = config.criteria.map(c => `<th>${c.name}</th>`).join("");
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${config.title}</title><style>body{font-family:Arial;padding:20px}h1{color:#DA291C}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ccc;padding:8px}th{background:#FFC72C}tr:nth-child(even){background:#f9f9f9}</style></head><body><h1>${config.title}</h1><p>Généré le ${fmtDate(Date.now())}</p><table><thead><tr><th>#</th><th>Participant</th>${ths}<th>Score</th></tr></thead><tbody>${rows}</tbody></table></body></html>`;
+    const w = window.open("","_blank"); w.document.write(html); w.document.close(); setTimeout(() => w.print(), 300);
+    addLog("Export PDF généré");
+  }
+
+  const TABS = { participants:"👥 Participants", criteria:"📊 Critères", reglement:"📋 Règlement", historique:"🕒 Historique", settings:"🔧 Réglages" };
+
+  return (
+    <div style={s.adminPage} onClick={resetLogoutTimer}>
+      <header style={s.adminHeader}>
+        <button style={s.backBtn} onClick={onBack}>← Vue publique</button>
+        <h2 style={s.adminTitle}>⚙️ Administration</h2>
+        <div style={s.tabBar}>
+          {Object.entries(TABS).map(([k,v]) => (
+            <button key={k} style={{ ...s.tabBtn, ...(tab===k ? s.tabActive : {}) }} onClick={() => setTab(k)}>{v}</button>
+          ))}
+        </div>
+      </header>
+
+      <div style={s.adminBody}>
+
+        {/* PARTICIPANTS */}
+        {tab === "participants" && (
+          <div style={s.section}>
+            <h3 style={s.sectionTitle}>Ajouter un participant</h3>
+            <div style={s.row}>
+              <input style={s.input} placeholder="Nom" value={newName}
+                onChange={act(e => setNewName(e.target.value))}
+                onKeyDown={e => e.key==="Enter" && addParticipant()}/>
+              <button style={s.addBtn} onClick={act(addParticipant)}>+ Ajouter</button>
+            </div>
+            <h3 style={{ ...s.sectionTitle, marginTop:28 }}>Liste ({participants.length})</h3>
+            {participants.length === 0 && <p style={s.emptyText}>Aucun participant.</p>}
+            <div style={s.pList}>
+              {ranked.map((p, i) => {
+                const full = participants.find(x => x.id===p.id) || p;
+                return (
+                  <div key={p.id} style={s.pCard}>
+                    <div style={s.pCardHead}>
+                      <span style={s.pRank}>{MEDAL[i] || `#${i+1}`}</span>
+                      <span style={s.pName}>{p.name}</span>
+                      {p.restaurant && <span style={s.restaurantBadge}>{p.restaurant}</span>}
+                      <span style={s.pTotal}>{p.total.toFixed(2)} pts</span>
+                      <button style={s.editBtn} onClick={act(() => setEditP(editP?.id===p.id ? null : full))}>
+                        {editP?.id===p.id ? "▲ Fermer" : "✏️ Scores"}
+                      </button>
+                      <button style={s.delBtn} onClick={act(() => removeParticipant(p.id, p.name))}>🗑</button>
+                    </div>
+                    {editP?.id === p.id && (
+                      <div style={s.scoreGrid}>
+                        {/* Restaurant selector */}
+                        <div style={s.scoreBlock}>
+                          <label style={{ ...s.scoreLabel, fontWeight:700 }}>🍔 Restaurant</label>
+                          <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginTop:4 }}>
+                            {(config.restaurants||[]).map(resto => (
+                              <button key={resto}
+                                style={{ ...s.restoBtn, ...(full.restaurant===resto ? s.restoBtnActive : {}) }}
+                                onClick={act(() => {
+                                  const updP = participants.find(x=>x.id===p.id);
+                                  if(updP){ const np={...updP,restaurant:resto}; dbSaveParticipant(np); }
+                                  setEditP(ep => ep?.id===p.id ? { ...ep, restaurant:resto } : ep);
+                                  addLog(`${p.name} assigné à ${resto}`);
+                                })}>
+                                {resto}
+                              </button>
+                            ))}
+                            {full.restaurant && (
+                              <button style={s.restoBtnClear} onClick={act(() => {
+                                const updP2 = participants.find(x=>x.id===p.id);
+                                if(updP2){ const np={...updP2,restaurant:null}; dbSaveParticipant(np); }
+                                setEditP(ep => ep?.id===p.id ? { ...ep, restaurant:undefined } : ep);
+                              })}>✕ Retirer</button>
+                            )}
+                          </div>
+                        </div>
+                        {config.criteria.length===0 && <p style={s.emptyText}>Ajoutez d'abord des critères.</p>}
+                        {config.criteria.map(c => (
+                          <div key={c.id} style={s.scoreBlock}>
+                            <div style={s.scoreBlockHeader}>
+                              <label style={s.scoreLabel}>{c.name} <span style={s.scoreMax}>(max {c.max})</span></label>
+                              <input type="number" min={0} max={c.max} step="0.5" style={s.scoreInput}
+                                value={full.scores?.[c.id] ?? ""}
+                                onChange={act(e => updateScore(p.id, c.id, e.target.value))}/>
+                            </div>
+                            <textarea style={s.noteInput}
+                              placeholder={`Détail résultat pour « ${c.name} »…`}
+                              value={full.notes?.[c.id] ?? ""}
+                              onChange={act(e => updateNote(p.id, c.id, e.target.value))}/>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* CRITÈRES */}
+        {tab === "criteria" && (
+          <div style={s.section}>
+            <div style={s.row}>
+              <h3 style={s.sectionTitle}>Critères & Barème</h3>
+              <button style={s.addBtn} onClick={act(addCriterion)}>+ Ajouter</button>
+            </div>
+            <p style={s.helpText}>Score final = Σ (score / max × coefficient) · Glisser pour réordonner</p>
+            {config.criteria.length === 0 && <p style={s.emptyText}>Aucun critère.</p>}
+            <div style={s.criteriaList}>
+              {config.criteria.map((c, i) => (
+                <div key={c.id} style={{ ...s.criterionCard, opacity:dragIdx===i?0.5:1, cursor:"grab" }}
+                  draggable onDragStart={() => onDragStart(i)} onDragOver={e => onDragOver(e,i)} onDragEnd={onDragEnd}>
+                  <span style={s.criterionNum}>⋮ #{i+1}</span>
+                  <div style={s.criterionFields}>
+                    <div style={s.fieldGroup}><label style={s.fieldLabel}>Nom</label><input style={s.input} value={c.name} onChange={act(e => updCrit(c.id,"name",e.target.value))}/></div>
+                    <div style={s.fieldGroup}><label style={s.fieldLabel}>Max pts</label><input type="number" min={1} style={{ ...s.input, maxWidth:90 }} value={c.max} onChange={act(e => updCrit(c.id,"max",e.target.value))}/></div>
+                    <div style={s.fieldGroup}><label style={s.fieldLabel}>Coefficient</label><input type="number" min={0} step="0.5" style={{ ...s.input, maxWidth:90 }} value={c.weight} onChange={act(e => updCrit(c.id,"weight",e.target.value))}/></div>
+                    <div style={{ ...s.fieldGroup, flex:2, minWidth:180 }}>
+                      <label style={s.fieldLabel}>Description</label>
+                      <textarea style={{ ...s.input, minHeight:52, resize:"vertical" }} value={c.description??""} onChange={act(e => updCrit(c.id,"description",e.target.value))}/>
+                    </div>
+                  </div>
+                  <button style={s.delBtn} onClick={act(() => delCrit(c.id))}>🗑</button>
+                </div>
+              ))}
+            </div>
+            {config.criteria.length > 0 && (
+              <div style={s.bareme}>
+                <p style={s.baremeTitle}>Récapitulatif</p>
+                {config.criteria.map(c => (
+                  <div key={c.id} style={s.baremeRow}>
+                    <span>{c.name}</span>
+                    <span style={s.baremeVal}>max {c.max} pts × coeff {c.weight} = {parseFloat(c.weight)||0} pts pondérés</span>
+                  </div>
+                ))}
+                <div style={{ ...s.baremeRow, fontWeight:700, color:"#FFD700", marginTop:8 }}>
+                  <span>TOTAL MAX</span>
+                  <span>{config.criteria.reduce((s,c) => s+(parseFloat(c.weight)||0), 0)} pts</span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* RÈGLEMENT */}
+        {tab === "reglement" && (
+          <div style={s.section}>
+            <h3 style={s.sectionTitle}>📋 Règlement du concours</h3>
+            <p style={s.helpText}>Rédigez librement. Visible dans l'onglet "Règlement" de la vue publique.</p>
+            <textarea style={{ ...s.input, marginTop:12, minHeight:380, resize:"vertical", lineHeight:1.7, fontSize:14, fontFamily:"inherit" }}
+              placeholder={"Rédigez ici le règlement du concours...\n\nEx :\nArticle 1 — Participants\n...\n\nArticle 2 — Critères\n..."}
+              value={config.reglement ?? ""}
+              onChange={act(e => { const v = e.target.value; setConfig(c => { const n={...c,reglement:v}; saveConfigDebounced(n); return n; }); })}/>
+            <div style={{ marginTop:10, display:"flex", alignItems:"center", gap:12 }}>
+              <span style={{ color:"#6b7280", fontSize:12 }}>{(config.reglement??"").length} caractères</span>
+              {config.reglement && (
+                <button style={s.dangerBtn} onClick={act(() => { if (window.confirm("Effacer ?")) { setConfig(c => { const n={...c,reglement:""}; dbSaveConfig(n); return n; }); }; })}>🗑 Effacer</button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* HISTORIQUE */}
+        {tab === "historique" && (
+          <div style={s.section}>
+            <div style={s.row}>
+              <h3 style={s.sectionTitle}>🕒 Historique des modifications</h3>
+              <button style={s.dangerBtn} onClick={() => { if (window.confirm("Effacer l'historique ?")) setLog([]); }}>🗑 Effacer</button>
+            </div>
+            {log.length === 0 ? <p style={s.emptyText}>Aucune action enregistrée.</p> : (
+              <div style={s.logList}>
+                {log.map((l, i) => (
+                  <div key={i} style={s.logItem}>
+                    <span style={s.logTs}>{fmtDate(l.ts)}</span>
+                    <span style={s.logMsg}>{l.msg}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* RÉGLAGES */}
+        {tab === "settings" && (
+          <div style={s.section}>
+            <h3 style={s.sectionTitle}>Informations du concours</h3>
+            <div style={s.fieldGroup}><label style={s.fieldLabel}>Titre</label><input style={s.input} value={config.title} onChange={act(e => { const v = e.target.value; setConfig(c => { const n={...c,title:v}; saveConfigDebounced(n); return n; }); })}/></div>
+            <div style={s.fieldGroup}><label style={s.fieldLabel}>Sous-titre</label><input style={s.input} value={config.subtitle} onChange={act(e => { const v = e.target.value; setConfig(c => { const n={...c,subtitle:v}; saveConfigDebounced(n); return n; }); })}/></div>
+            <div style={s.fieldGroup}><label style={s.fieldLabel}>Date de fin du concours (compte à rebours)</label><input type="datetime-local" style={s.input} value={config.endDate||""} onChange={act(e => { const v = e.target.value; setConfig(c => { const n={...c,endDate:v}; saveConfigDebounced(n); return n; }); })}/></div>
+
+            <div style={{ ...s.authSection, marginTop:24 }}>
+              <div style={s.authSectionHeader}>
+                <span style={{ fontSize:22 }}>🍔</span>
+                <div>
+                  <h3 style={{ margin:0, color:"#e8eaf6", fontSize:16 }}>Restaurants</h3>
+                  <p style={s.helpText}>Gérez les restaurants du concours</p>
+                </div>
+              </div>
+              <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                {(config.restaurants||[]).map((r, i) => (
+                  <div key={i} style={{ display:"flex", gap:8, alignItems:"center" }}>
+                    <input style={{ ...s.input, flex:1 }} value={r}
+                      onChange={act(e => {
+                        const rs = [...(config.restaurants||[])];
+                        rs[i] = e.target.value;
+                        setConfig(c => { const n={...c,restaurants:rs}; saveConfigDebounced(n); return n; });
+                      })}/>
+                    <button style={s.delBtn} onClick={act(() => {
+                      const rs = (config.restaurants||[]).filter((_,j) => j!==i);
+                      setConfig(c => { const n={...c,restaurants:rs}; saveConfigDebounced(n); return n; });
+                    })}>🗑</button>
+                  </div>
+                ))}
+                <button style={{ ...s.addBtn, alignSelf:"flex-start", marginTop:4 }}
+                  onClick={act(() => setConfig(c => { const n={...c,restaurants:[...(c.restaurants||[]),("Nouveau restaurant")]}; saveConfigDebounced(n); return n; }))}>
+                  + Ajouter un restaurant
+                </button>
+              </div>
+            </div>
+
+            <div style={{ ...s.authSection, marginTop:24 }}>
+              <div style={s.authSectionHeader}>
+                <span style={{ fontSize:22 }}>🔒</span>
+                <div>
+                  <h3 style={{ margin:0, color:"#e8eaf6", fontSize:16 }}>Visibilité du classement</h3>
+                  <p style={s.helpText}>Masquer temporairement les résultats au public</p>
+                </div>
+              </div>
+              <div style={s.row}>
+                <button style={{ ...s.addBtn, background:config.hidden?"#f87171":"#4ade80", color:"#1a1a1a" }}
+                  onClick={act(() => { setConfig(c => { const n={...c,hidden:!c.hidden}; dbSaveConfig(n); return n; }); addLog(config.hidden ? "Classement rendu visible" : "Classement masqué"); })}>
+                  {config.hidden ? "👁 Afficher le classement" : "🔒 Masquer le classement"}
+                </button>
+                <span style={{ color:config.hidden?"#f87171":"#4ade80", fontSize:13, fontWeight:700 }}>
+                  {config.hidden ? "Masqué" : "Visible"}
+                </span>
+              </div>
+            </div>
+
+            <div style={s.authSection}>
+              <div style={s.authSectionHeader}>
+                <span style={{ fontSize:22 }}>📄</span>
+                <div><h3 style={{ margin:0, color:"#e8eaf6", fontSize:16 }}>Export PDF</h3><p style={s.helpText}>Génère une page imprimable du classement</p></div>
+              </div>
+              <button style={s.addBtn} onClick={act(exportPDF)}>📄 Générer le PDF</button>
+            </div>
+
+            <div style={s.authSection}>
+              <div style={s.authSectionHeader}><span style={{ fontSize:22 }}>🔢</span><div><h3 style={{ margin:0, color:"#e8eaf6", fontSize:16 }}>Code PIN (étape 1)</h3><p style={s.helpText}>4 chiffres</p></div></div>
+              <div style={s.row}>
+                <input type="password" inputMode="numeric" maxLength={4} style={{ ...s.input, maxWidth:140, letterSpacing:6, fontSize:20 }}
+                  placeholder="••••" value={newPin} onChange={act(e => setNewPin(e.target.value.replace(/\D/g,"")))}/>
+                <button style={s.addBtn} onClick={act(savePin)}>Enregistrer</button>
+              </div>
+              {pinMsg && <p style={{ color:pinMsg.startsWith("✅")?"#4ade80":"#f87171", marginTop:8, fontSize:13 }}>{pinMsg}</p>}
+            </div>
+
+            <div style={s.authSection}>
+              <div style={s.authSectionHeader}><span style={{ fontSize:22 }}>🔑</span><div><h3 style={{ margin:0, color:"#e8eaf6", fontSize:16 }}>Mot de passe (étape 2)</h3><p style={s.helpText}>Minimum 8 caractères</p></div></div>
+              <div style={s.fieldGroup}>
+                <label style={s.fieldLabel}>Nouveau mot de passe</label>
+                <div style={s.passwordWrap}>
+                  <input type={showNP?"text":"password"} style={{ ...s.input, paddingRight:44 }} value={newPwd}
+                    onChange={act(e => { setNewPwd(e.target.value); setPwdMsg(""); })}/>
+                  <button style={s.eyeBtn} onClick={() => setShowNP(v=>!v)}>{showNP?"🙈":"👁"}</button>
+                </div>
+              </div>
+              <div style={s.fieldGroup}>
+                <label style={s.fieldLabel}>Confirmer</label>
+                <input type="password" style={s.input} value={newPwdC}
+                  onChange={act(e => { setNewPwdC(e.target.value); setPwdMsg(""); })}
+                  onKeyDown={e => e.key==="Enter" && savePwd()}/>
+              </div>
+              <button style={{ ...s.addBtn, marginTop:6, alignSelf:"flex-start" }} onClick={act(savePwd)}>Enregistrer</button>
+              {pwdMsg && <p style={{ color:pwdMsg.startsWith("✅")?"#4ade80":"#f87171", marginTop:8, fontSize:13 }}>{pwdMsg}</p>}
+            </div>
+
+            <div style={s.authInfo}>
+              <p style={{ margin:0, color:"#6b7280", fontSize:12 }}>🛡 Identifiants stockés en SHA-256. Blocage après {MAX_ATTEMPTS} tentatives / {LOCKOUT_MS/60000} min. Déconnexion auto après {AUTO_LOGOUT_MS/60000} min d'inactivité.</p>
+              <p style={{ margin:"6px 0 0", color:"#6b7280", fontSize:12 }}>Par défaut — PIN : <code style={{ color:"#FFD700" }}>1234</code> · Mot de passe : <code style={{ color:"#FFD700" }}>Admin2024!</code></p>
+            </div>
+
+            <h3 style={{ ...s.sectionTitle, marginTop:32, color:"#f87171" }}>Zone dangereuse</h3>
+            <button style={s.dangerBtn} onClick={act(() => { if (window.confirm("Supprimer TOUS les participants ?")) { supabase.from("participants").delete().neq("id","00000000-0000-0000-0000-000000000000").then(()=>{ setParticipants([]); addLog("Tous les participants supprimés"); }); } })}>🗑 Réinitialiser participants</button>
+            <button style={{ ...s.dangerBtn, marginLeft:10 }} onClick={act(() => { if (window.confirm("Supprimer TOUS les critères ?")) { setConfig(c => { const n={...c,criteria:[]}; dbSaveConfig(n); return n; }); addLog("Critères supprimés"); } })}>🗑 Réinitialiser critères</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── McDONALD'S STYLES ─────────────────────────────────────────────────────────
+const mc = {
+  page:              { minHeight:"100vh", background:"#FFF8E7", fontFamily:"'Nunito','Arial Rounded MT Bold',sans-serif", position:"relative", overflow:"hidden" },
+  bgLeft:            { position:"fixed", top:0, left:-80, width:260, height:"100vh", background:"linear-gradient(180deg,#DA291C,#c0221a)", zIndex:0, clipPath:"polygon(0 0,80% 0,100% 100%,0 100%)", opacity:0.08, pointerEvents:"none" },
+  bgRight:           { position:"fixed", top:0, right:-80, width:260, height:"100vh", background:"linear-gradient(180deg,#FFC72C,#e6a800)", zIndex:0, clipPath:"polygon(20% 0,100% 0,100% 100%,0 100%)", opacity:0.12, pointerEvents:"none" },
+  header:            { position:"relative", background:"#DA291C", zIndex:10 },
+  headerStripe:      { height:6, background:"linear-gradient(90deg,#FFC72C,#ffdd66,#FFC72C)" },
+  headerStripeBottom:{ height:5, background:"linear-gradient(90deg,#b01f14,#DA291C,#b01f14)" },
+  headerContent:     { display:"flex", alignItems:"center", gap:16, padding:"18px 28px 16px", flexWrap:"wrap" },
+  logoWrap:          { borderRadius:14, flexShrink:0 },
+  headerText:        { flex:1 },
+  mainTitle:         { margin:0, fontSize:26, fontWeight:800, color:"#fff", letterSpacing:0.5, textShadow:"0 2px 8px rgba(0,0,0,0.25)", fontFamily:"'Fredoka One','Arial Rounded MT Bold',sans-serif" },
+  mainSubtitle:      { margin:"3px 0 0", color:"rgba(255,255,255,0.8)", fontSize:13 },
+  adminBtn:          { background:"rgba(0,0,0,0.2)", border:"2px solid rgba(255,255,255,0.2)", color:"rgba(255,255,255,0.6)", borderRadius:8, padding:"8px 12px", cursor:"pointer", fontSize:18 },
+  publicTabBar:      { display:"flex", gap:0, background:"rgba(0,0,0,0.2)" },
+  publicTab:         { flex:1, padding:"11px 0", background:"transparent", border:"none", color:"rgba(255,255,255,0.65)", fontWeight:700, fontSize:14, cursor:"pointer", letterSpacing:0.5, fontFamily:"'Nunito',sans-serif" },
+  publicTabActive:   { background:"#FFF8E7", color:"#DA291C", borderTop:"3px solid #FFC72C" },
+  empty:             { display:"flex", flexDirection:"column", alignItems:"center", gap:10, padding:"80px 20px", textAlign:"center" },
+  countdown:         { margin:"20px 16px 0", padding:"16px 20px", background:"linear-gradient(135deg,#DA291C,#c0221a)", borderRadius:12, textAlign:"center", boxShadow:"0 4px 16px rgba(218,41,28,0.3)", position:"relative", zIndex:1 },
+  countdownLabel:    { color:"rgba(255,255,255,0.85)", fontSize:13, fontWeight:700, letterSpacing:1, textTransform:"uppercase", marginBottom:8 },
+  countdownRow:      { display:"flex", justifyContent:"center", alignItems:"baseline", gap:6 },
+  countdownNum:      { fontSize:32, fontWeight:900, color:"#FFC72C", fontFamily:"'Fredoka One',sans-serif" },
+  countdownUnit:     { fontSize:14, color:"rgba(255,255,255,0.7)", fontWeight:700, marginRight:4 },
+  podiumSection:     { padding:"36px 20px 0", maxWidth:560, margin:"0 auto" },
+  podiumLabel:       { textAlign:"center", fontSize:12, fontWeight:800, letterSpacing:3, color:"#DA291C", textTransform:"uppercase", marginBottom:20 },
+  podiumWrap:        { display:"flex", justifyContent:"center", alignItems:"flex-end", gap:10 },
+  podiumCol:         { display:"flex", flexDirection:"column", alignItems:"center" },
+  podiumAvatar:      { fontSize:32, marginBottom:4 },
+  podiumName:        { fontSize:12, fontWeight:800, color:"#1a1a1a", marginBottom:6, textAlign:"center", maxWidth:120, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" },
+  podiumBar:         { width:110, display:"flex", alignItems:"flex-start", justifyContent:"center", paddingTop:10, borderRadius:"10px 10px 0 0" },
+  podiumScore:       { fontSize:22, fontWeight:800, color:"#1a1a1a" },
+  podiumBase:        { width:110, height:38, display:"flex", alignItems:"center", justifyContent:"center", fontWeight:900, fontSize:20, borderRadius:"0 0 8px 8px" },
+  tableSection:      { margin:"32px 16px 0", position:"relative", zIndex:1 },
+  tableTitleBar:     { display:"flex", alignItems:"center", gap:10, background:"#DA291C", color:"#fff", padding:"10px 20px", borderRadius:"10px 10px 0 0", fontWeight:800, fontSize:15, textTransform:"uppercase", letterSpacing:0.5 },
+  tableTitleIcon:    { fontSize:18 },
+  tableWrap:         { overflowX:"auto", borderRadius:"0 0 12px 12px", border:"2px solid #DA291C", borderTop:"none", background:"#fff" },
+  table:             { width:"100%", borderCollapse:"collapse", fontSize:14 },
+  th:                { padding:"12px 16px", textAlign:"left", background:"#FFC72C", color:"#1a1a1a", fontWeight:800, borderBottom:"2px solid #e6a800", whiteSpace:"nowrap", fontSize:13 },
+  thTotal:           { color:"#DA291C", background:"#fff3cd" },
+  tr:                { borderBottom:"1px solid #f0e0c0" },
+  trGold:            { background:"#fffaed" },
+  trSilver:          { background:"#f8f8f8" },
+  trBronze:          { background:"#fdf6f0" },
+  td:                { padding:"11px 16px", color:"#1a1a1a", verticalAlign:"top" },
+  tdTotal:           { fontWeight:900, color:"#DA291C", fontSize:17, textAlign:"center" },
+  noteText:          { fontSize:11, color:"#888", marginTop:3, fontStyle:"italic", lineHeight:1.4, maxWidth:200 },
+  baremeSection:     { margin:"24px 16px 0", position:"relative", zIndex:1 },
+  baremeTitleBar:    { background:"#1a1a1a", color:"#FFC72C", padding:"10px 20px", borderRadius:"10px 10px 0 0", fontWeight:800, fontSize:14, textTransform:"uppercase" },
+  baremeGrid:        { display:"flex", flexWrap:"wrap", background:"#fff", border:"2px solid #1a1a1a", borderTop:"none", borderRadius:"0 0 10px 10px", overflow:"hidden" },
+  baremeCard:        { padding:"14px 18px", flex:"1 1 200px", borderRight:"1px solid #f0e0c0", borderBottom:"1px solid #f0e0c0" },
+  baremeCardTitle:   { fontWeight:800, color:"#1a1a1a", fontSize:14, marginBottom:6 },
+  baremeCardDetails: { display:"flex", gap:6, flexWrap:"wrap", marginBottom:4 },
+  baremeTag:         { background:"#FFC72C", color:"#1a1a1a", fontWeight:700, fontSize:11, padding:"2px 8px", borderRadius:20 },
+  baremeCardDesc:    { margin:"6px 0 0", fontSize:12, color:"#666", lineHeight:1.4 },
+  lastUpdate:        { textAlign:"center", color:"#aaa", fontSize:11, margin:"12px 0 0", fontStyle:"italic", paddingBottom:16 },
+  reglementPage:     { margin:"24px 16px 0", position:"relative", zIndex:1 },
+  reglementTitleBar: { display:"flex", alignItems:"center", gap:10, background:"#DA291C", color:"#fff", padding:"10px 20px", borderRadius:"10px 10px 0 0", fontWeight:800, fontSize:15, textTransform:"uppercase" },
+  reglementContent:  { background:"#fff", border:"2px solid #DA291C", borderTop:"none", borderRadius:"0 0 12px 12px", padding:"24px 28px" },
+  reglementPara:     { margin:"0 0 10px", color:"#1a1a1a", fontSize:14, lineHeight:1.8 },
+  reglementEmpty:    { background:"#fff", border:"2px solid #DA291C", borderTop:"none", borderRadius:"0 0 12px 12px", padding:"48px 20px", display:"flex", flexDirection:"column", alignItems:"center", gap:10, color:"#999", fontSize:14 },
+  footer:            { marginTop:40, position:"relative" },
+  footerStripe:      { height:8, background:"linear-gradient(90deg,#DA291C,#FFC72C,#DA291C)" },
+};
+
+// ── ADMIN STYLES ──────────────────────────────────────────────────────────────
+const s = {
+  adminPage:         { minHeight:"100vh", background:"#0a0e1a", color:"#e8eaf6", fontFamily:"system-ui,sans-serif" },
+  adminHeader:       { background:"#111827", borderBottom:"1px solid rgba(255,215,0,0.15)", padding:"16px 24px" },
+  backBtn:           { background:"transparent", border:"1px solid rgba(255,255,255,0.15)", color:"#9ca3af", padding:"7px 14px", borderRadius:8, cursor:"pointer", fontSize:13, marginBottom:12 },
+  adminTitle:        { margin:"0 0 14px", color:"#FFD700", fontSize:20 },
+  tabBar:            { display:"flex", gap:8, flexWrap:"wrap" },
+  tabBtn:            { padding:"8px 18px", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", color:"#9ca3af", borderRadius:8, cursor:"pointer", fontSize:13 },
+  tabActive:         { background:"rgba(255,215,0,0.12)", border:"1px solid rgba(255,215,0,0.4)", color:"#FFD700", fontWeight:600 },
+  adminBody:         { padding:"24px" },
+  section:           { maxWidth:820 },
+  sectionTitle:      { margin:"0 0 14px", color:"#e8eaf6", fontSize:17, fontWeight:600 },
+  row:               { display:"flex", alignItems:"center", gap:10, flexWrap:"wrap" },
+  input:             { padding:"9px 14px", background:"#1f2937", border:"1px solid rgba(255,255,255,0.12)", color:"#e8eaf6", borderRadius:8, fontSize:14, outline:"none", flex:1, minWidth:0 },
+  addBtn:            { padding:"9px 18px", background:"#FFD700", color:"#0a0e1a", border:"none", borderRadius:8, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap", fontSize:14 },
+  emptyText:         { color:"#6b7280", fontStyle:"italic", fontSize:14 },
+  helpText:          { color:"#6b7280", fontSize:13, margin:"4px 0 8px" },
+  pList:             { display:"flex", flexDirection:"column", gap:10 },
+  pCard:             { background:"#111827", border:"1px solid rgba(255,255,255,0.08)", borderRadius:10, overflow:"hidden" },
+  pCardHead:         { display:"flex", alignItems:"center", gap:10, padding:"12px 16px", flexWrap:"wrap" },
+  pRank:             { fontSize:20, width:28 },
+  pName:             { fontWeight:600, flex:1, minWidth:80 },
+  pTotal:            { color:"#FFD700", fontWeight:700, fontSize:16 },
+  restaurantBadge:   { background:"#006B2D", color:"#FFC72C", fontSize:11, fontWeight:700, padding:"2px 8px", borderRadius:12, whiteSpace:"nowrap" },
+  restoBtn:          { padding:"6px 14px", background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.15)", color:"#d1d5db", borderRadius:8, cursor:"pointer", fontSize:13, fontWeight:600 },
+  restoBtnActive:    { background:"#006B2D", border:"1px solid #FFC72C", color:"#FFC72C" },
+  restoBtnClear:     { padding:"6px 12px", background:"rgba(248,113,113,0.1)", border:"1px solid rgba(248,113,113,0.3)", color:"#f87171", borderRadius:8, cursor:"pointer", fontSize:12 },
+  editBtn:           { padding:"5px 12px", background:"rgba(255,215,0,0.1)", border:"1px solid rgba(255,215,0,0.3)", color:"#FFD700", borderRadius:6, cursor:"pointer", fontSize:12 },
+  delBtn:            { background:"rgba(248,113,113,0.1)", border:"1px solid rgba(248,113,113,0.25)", color:"#f87171", borderRadius:6, padding:"5px 10px", cursor:"pointer" },
+  scoreGrid:         { padding:"12px 16px", borderTop:"1px solid rgba(255,255,255,0.06)", display:"flex", flexDirection:"column", gap:14 },
+  scoreBlock:        { display:"flex", flexDirection:"column", gap:6, background:"rgba(255,255,255,0.02)", borderRadius:8, padding:"10px 12px", border:"1px solid rgba(255,255,255,0.06)" },
+  scoreBlockHeader:  { display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" },
+  scoreLabel:        { flex:1, minWidth:120, color:"#d1d5db", fontSize:14 },
+  scoreMax:          { color:"#6b7280", fontSize:12 },
+  scoreInput:        { width:90, padding:"7px 10px", background:"#1f2937", border:"1px solid rgba(255,215,0,0.25)", color:"#FFD700", borderRadius:6, fontSize:16, fontWeight:700, textAlign:"right", outline:"none" },
+  noteInput:         { width:"100%", padding:"8px 12px", background:"#0f172a", border:"1px solid rgba(255,255,255,0.08)", color:"#d1d5db", borderRadius:6, fontSize:13, outline:"none", resize:"vertical", minHeight:52, lineHeight:1.5, fontFamily:"inherit", boxSizing:"border-box" },
+  criteriaList:      { display:"flex", flexDirection:"column", gap:12 },
+  criterionCard:     { background:"#111827", border:"1px solid rgba(255,255,255,0.08)", borderRadius:10, padding:"14px 16px", display:"flex", alignItems:"flex-start", gap:12 },
+  criterionNum:      { color:"#4b5563", fontSize:13, minWidth:28, paddingTop:10 },
+  criterionFields:   { display:"flex", gap:12, flex:1, flexWrap:"wrap" },
+  fieldGroup:        { display:"flex", flexDirection:"column", gap:5, flex:1, minWidth:120 },
+  fieldLabel:        { color:"#9ca3af", fontSize:12, textTransform:"uppercase", letterSpacing:0.5 },
+  bareme:            { marginTop:24, padding:"16px 20px", background:"rgba(255,215,0,0.05)", border:"1px solid rgba(255,215,0,0.15)", borderRadius:10 },
+  baremeTitle:       { margin:"0 0 10px", color:"#9ca3af", fontSize:12, textTransform:"uppercase", letterSpacing:1 },
+  baremeRow:         { display:"flex", justifyContent:"space-between", fontSize:14, padding:"4px 0", borderBottom:"1px solid rgba(255,255,255,0.05)", color:"#d1d5db" },
+  baremeVal:         { color:"#9ca3af" },
+  logList:           { display:"flex", flexDirection:"column", gap:8, marginTop:8 },
+  logItem:           { display:"flex", gap:12, padding:"10px 14px", background:"#111827", border:"1px solid rgba(255,255,255,0.06)", borderRadius:8, flexWrap:"wrap" },
+  logTs:             { color:"#6b7280", fontSize:12, whiteSpace:"nowrap" },
+  logMsg:            { color:"#d1d5db", fontSize:13, flex:1 },
+  pinPage:           { minHeight:"100vh", background:"#0a0e1a", display:"flex", alignItems:"center", justifyContent:"center" },
+  pinBox:            { background:"#111827", border:"1px solid rgba(255,215,0,0.2)", borderRadius:20, padding:"40px 36px", display:"flex", flexDirection:"column", alignItems:"center", gap:12, minWidth:300, boxShadow:"0 20px 60px rgba(0,0,0,0.5)" },
+  pinTitle:          { margin:0, color:"#FFD700", fontSize:22 },
+  pinSub:            { margin:0, color:"#9ca3af", fontSize:13 },
+  pinDots:           { display:"flex", gap:14, margin:"8px 0" },
+  pinDot:            { width:16, height:16, borderRadius:"50%" },
+  pinGrid:           { display:"grid", gridTemplateColumns:"repeat(3,64px)", gap:10 },
+  pinKey:            { height:56, fontSize:22, fontWeight:600, background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.1)", color:"#e8eaf6", borderRadius:12, cursor:"pointer" },
+  pinError:          { color:"#f87171", fontSize:13, margin:0 },
+  pinSubmit:         { padding:"10px 24px", background:"#FFD700", color:"#0a0e1a", border:"none", borderRadius:10, fontWeight:700, fontSize:15, cursor:"pointer" },
+  pinCancel:         { padding:"10px 20px", background:"transparent", color:"#9ca3af", border:"1px solid rgba(255,255,255,0.1)", borderRadius:10, cursor:"pointer", fontSize:15 },
+  stepBar:           { display:"flex", alignItems:"center" },
+  stepDot:           { width:28, height:28, borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:700, fontSize:13, color:"#0a0e1a", flexShrink:0 },
+  stepLine:          { width:48, height:3, borderRadius:2 },
+  stepLabel:         { margin:"0 0 6px", color:"#9ca3af", fontSize:12, textTransform:"uppercase", letterSpacing:1 },
+  lockoutBox:        { textAlign:"center", padding:"16px 24px", background:"rgba(248,113,113,0.07)", border:"1px solid rgba(248,113,113,0.2)", borderRadius:12 },
+  passwordWrap:      { position:"relative", display:"flex", alignItems:"center", width:"100%" },
+  passwordInput:     { flex:1, padding:"12px 44px 12px 16px", background:"#1f2937", border:"1px solid rgba(255,255,255,0.15)", color:"#e8eaf6", borderRadius:10, fontSize:16, outline:"none", width:"100%", boxSizing:"border-box" },
+  eyeBtn:            { position:"absolute", right:10, background:"transparent", border:"none", cursor:"pointer", fontSize:18, padding:4 },
+  authSection:       { marginTop:24, padding:20, background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:12, display:"flex", flexDirection:"column", gap:12 },
+  authSectionHeader: { display:"flex", alignItems:"flex-start", gap:12 },
+  authInfo:          { marginTop:20, padding:"12px 16px", background:"rgba(255,215,0,0.04)", border:"1px solid rgba(255,215,0,0.1)", borderRadius:8 },
+  dangerBtn:         { padding:"9px 18px", background:"rgba(248,113,113,0.08)", border:"1px solid rgba(248,113,113,0.25)", color:"#f87171", borderRadius:8, cursor:"pointer", fontSize:14, marginBottom:8 },
+};
+
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+ReactDOM.createRoot(document.getElementById("root")).render(
+  React.createElement(React.StrictMode, null, React.createElement(App))
+);
+  </script>
+</body>
+</html>
