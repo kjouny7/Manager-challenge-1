@@ -574,6 +574,22 @@ function PublicView({ config, ranked, participants, onAdminClick }) {
                 <div style={{margin:"12px 10px 0",background:"rgba(15,12,0,0.95)",border:"2px solid var(--gold)",borderRadius:12,overflow:"hidden",boxShadow:"var(--shadow-gold)"}}>
                   <div style={{display:"flex",alignItems:"center",gap:8,padding:"9px 12px",borderBottom:"1px solid rgba(255,215,0,0.12)",background:"rgba(255,215,0,0.04)"}}>
                     <span style={{fontSize:14}}>🏆</span>
+
+
+  <img 
+    src="emote_1_png-removebg-preview.png" 
+    style={{
+      position: 'absolute',
+      top: '40px',      /* On la remonte au lieu de la descendre */
+      left: '-100px',        /* On la remet bien au bord gauche */
+      height: '150px',
+      zIndex: 9999,       /* On la met tout devant */
+      pointerEvents: 'none',
+      display: 'block'
+    }} 
+  />
+)}
+
                     <span style={{fontSize:12,letterSpacing:3,color:"var(--gold)",textShadow:"2px 2px 0 #000"}}>CLASSEMENT COMPLET</span>
                     <div style={{flex:1,height:2,background:"repeating-linear-gradient(90deg,rgba(255,215,0,0.25) 0,rgba(255,215,0,0.25) 4px,transparent 4px,transparent 8px)",marginLeft:6}}/>
                   </div>
@@ -1433,16 +1449,4 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 );
   </script>
 </body>
-<img 
-  src="emote_1_png-removebg-preview.png" 
-  style="
-    position: fixed !important;
-    bottom: 600px !important; 
-    left: -9% !important; 
-    height: 160px !important; 
-    z-index: 100000 !important;
-    pointer-events: none !important;
-    display: block !important;
-  "
->
 </html>
