@@ -634,6 +634,22 @@ function RestaurantsView({ config, participants, ranked }) {
     return{name,total,members};
   }).sort((a,b)=>b.total-a.total);
   const maxTotal=restaurantScores[0]?.total||1;
+if (typeof document !== 'undefined' && !document.getElementById('float-style')) {
+    const style = document.createElement('style');
+    style.id = 'float-style';
+    style.innerHTML = `
+      @keyframes floating {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-8px); }
+        100% { transform: translateY(0px); }
+      }
+      .float-anim {
+        animation: floating 3s ease-in-out infinite;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  // -------------------------
   return(
     <div style={{padding:"12px 10px 0"}}>
       <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
@@ -652,11 +668,18 @@ function RestaurantsView({ config, participants, ranked }) {
               {isFirst&&<div style={{fontSize:16,marginBottom:2,filter:"drop-shadow(0 0 8px gold)"}}>👑</div>}
               <div style={{width:"100%",background:st.bg,border:`2px solid ${st.brd}`,borderRadius:isFirst?"10px 10px 0 0":"8px 8px 0 0",overflow:"hidden"}}>
                 <div style={{height:2,background:`linear-gradient(90deg,transparent,${st.brd},transparent)`}}/>
-                <div style={{display:"flex",justifyContent:"center",padding:isFirst?"10px 0 5px":"8px 0 4px"}}>
-                  <div style={{width:isFirst?64:50,height:isFirst?64:50,background:"rgba(255,255,255,0.04)",border:`2px solid ${st.brd}`,borderRadius:7,display:"flex",alignItems:"center",justifyContent:"center"}} className="float">
-                    {(RESTO_AVATARS[r.name]||st.icon)?<img src={RESTO_AVATARS[r.name]||st.icon} alt="" style={{width:isFirst?54:42,height:isFirst?54:42,objectFit:"cover",borderRadius:"50%",border:`2px solid ${st.brd}`}}/>:<span style={{fontSize:isFirst?36:26}}>🍔</span>}
-                  </div>
-                </div>
+ <div style={{ width: "100%", display: "flex", justifyContent: "center", padding: "10px 0" }}>
+  {(RESTO_AVATARS[r.name] || st.icon) ? (
+    <img 
+      src={RESTO_AVATARS[r.name] || st.icon} 
+      alt=""
+      className="float-anim" 
+      style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 0, border: "none" }} 
+    />
+  ) : (
+    <span style={{ fontSize: 18 }}>🍔</span>
+  )}
+</div>                 
                 <div style={{textAlign:"center",fontSize:isFirst?13:10,letterSpacing:1,color:"#fff",padding:"0 5px 3px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",textShadow:"1px 1px 0 #000"}}>{r.name.toUpperCase()}</div>
                 <div style={{margin:"0 7px 7px",background:"rgba(0,0,0,0.55)",borderRadius:5,padding:"4px",textAlign:"center",border:`1px solid ${st.brd}30`}}>
                   <div className="led" style={{fontSize:isFirst?20:15,color:st.brd,textShadow:`0 0 8px ${st.brd}`}}>{r.total.toFixed(1)}</div>
@@ -677,7 +700,9 @@ function RestaurantsView({ config, participants, ranked }) {
             <div key={r.name} style={{background:"rgba(15,12,0,0.95)",border:`2px solid ${st.brd}`,borderRadius:10,overflow:"hidden",boxShadow:`0 0 10px ${st.brd}33`}}>
               <div style={{padding:"10px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
                 <div style={{display:"flex",alignItems:"center",gap:8}}>
-                  {(RESTO_AVATARS[r.name]||st.icon)?<img src={RESTO_AVATARS[r.name]||st.icon} alt="" style={{width:32,height:32,objectFit:"cover",borderRadius:"50%",border:`1px solid ${st.brd}`,flexShrink:0}}/>:<span style={{fontSize:18}}>🍔</span>}
+                  {(RESTO_AVATARS[r.name]||st.icon) ? 
+  <img src={RESTO_AVATARS[r.name]||st.icon} alt="" style={{width: 60, height: "100%", objectFit: "cover", flexShrink: 0}} /> 
+  : <span style={{fontSize: 18}}>🍔</span>}
                   <div>
                     <div style={{fontSize:13,letterSpacing:1,color:"#fff",textShadow:"1px 1px 0 #000"}}>{r.name.toUpperCase()}</div>
                     <div style={{fontSize:9,color:"rgba(255,255,255,0.28)",fontFamily:"'Nunito',sans-serif"}}>{r.members.length} participant{r.members.length>1?"s":""}</div>
@@ -1147,7 +1172,7 @@ function AdminView({ config, setConfig, participants, setParticipants, ranked, a
               <div style={s.row}>
                 <button style={{ ...s.addBtn, background:config.hidden?"#f87171":"#4ade80", color:"#1a1a1a" }}
                   onClick={act(() => { setConfig(c => { const n={...c,hidden:!c.hidden}; dbSaveConfig(n); return n; }); addLog(config.hidden ? "Classement rendu visible" : "Classement masqué"); })}>
-                  {config.hidden ? "👁 Afficher le classement" : "⚔️ LE CLASSEMENT ARRIVE BIENTÔT… PRÉPAREZ-VOUS À L’AFFRONTEMENT  ! 🏆"}
+                  {config.hidden ? "👁 Afficher le classement" : "🔒 Masquer le classement"}
                 </button>
                 <span style={{ color:config.hidden?"#f87171":"#4ade80", fontSize:13, fontWeight:700 }}>
                   {config.hidden ? "Masqué" : "Visible"}
