@@ -1147,7 +1147,7 @@ function AdminView({ config, setConfig, participants, setParticipants, ranked, a
               <div style={s.row}>
                 <button style={{ ...s.addBtn, background:config.hidden?"#f87171":"#4ade80", color:"#1a1a1a" }}
                   onClick={act(() => { setConfig(c => { const n={...c,hidden:!c.hidden}; dbSaveConfig(n); return n; }); addLog(config.hidden ? "Classement rendu visible" : "Classement masqué"); })}>
-                  {config.hidden ? "👁 Afficher le classement" : "🔒 Masquer le classement"}
+                  {config.hidden ? "👁 Afficher le classement" : "⚔️ LE CLASSEMENT ARRIVE BIENTÔT… PRÉPAREZ-VOUS À L’AFFRONTEMENT  ! 🏆"}
                 </button>
                 <span style={{ color:config.hidden?"#f87171":"#4ade80", fontSize:13, fontWeight:700 }}>
                   {config.hidden ? "Masqué" : "Visible"}
