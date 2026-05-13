@@ -414,13 +414,42 @@ function PublicView({ config, ranked, participants, onAdminClick }) {
         {/* RÈGLEMENT */}
         {tab==="reglement"&&(
           <div style={{margin:"14px 12px",position:"relative"}}>
-            <img src={EMOTE2_SRC} style={{position:"absolute",top: 5,left:880,height:30,zIndex:1000000,pointerEvents:"none",filter:"drop-shadow(0 0 6px rgba(255,215,0,0.3))"}}/>
-            <div style={{background:"rgba(20,15,0,0.95)",border:"2px solid var(--gold)",borderRadius:12,overflow:"hidden",boxShadow:"var(--shadow-gold)"}}>
-              <div style={{background:"linear-gradient(90deg,var(--red),#8B0000)",padding:"10px 14px",fontSize:13,letterSpacing:3,color:"var(--gold)",textShadow:"2px 2px 0 #000",
-display: "flex",
-  justifyContent: "center",
-  alignItems: "center"
-}}> RÈGLEMENT</div>
+            <div style={{
+    background: "rgba(20,15,0,0.95)",
+    border: "2px solid var(--gold)",
+    borderRadius: 12,
+    overflow: "visible", // CHANGÉ de hidden à visible pour que l'image puisse dépasser si besoin
+    boxShadow: "var(--shadow-gold)"
+}}>
+    <div style={{
+    background: "linear-gradient(90deg,var(--red),#8B0000)",
+    padding: "10px 14px",
+    fontSize: 13,
+    letterSpacing: 3,
+    color: "var(--gold)",
+    textShadow: "2px 2px 0 #000",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative" // Ceci verrouille la position pour le zoom
+}}>
+    RÈGLEMENT
+
+    {/* Le personnage est attaché au bandeau rouge */}
+    <img 
+        src={EMOTE2_SRC} 
+        style={{
+            position: "absolute",
+            right: "990px", // Il restera toujours à 10px du bord droit du bandeau
+            top: "45%",
+            transform: "translateY(-50%)",
+            height: "35px",
+            zIndex: 100,
+            pointerEvents: "none",
+            filter: "drop-shadow(0 0 6px rgba(255,215,0,0.3))"
+        }}
+    />
+</div>
               {config.reglement?(
                 <div style={{padding:"16px",fontFamily:"'Nunito',sans-serif"}}>
                   {config.reglement.split("\n").map((l,i)=>l.trim()===""?<br key={i}/>:<p key={i} style={{color:"rgba(255,255,255,0.8)",fontSize:14,lineHeight:1.8,margin:"0 0 8px"}}>{l}</p>)}
