@@ -431,24 +431,25 @@ function PublicView({ config, ranked, participants, onAdminClick }) {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    position: "relative" // Ceci verrouille la position pour le zoom
+    position: "relative" // C'est l'ancre indispensable
 }}>
-    RÈGLEMENT
-
-    {/* Le personnage est attaché au bandeau rouge */}
+    {/* Le bonhomme est placé ici, à l'intérieur du bandeau */}
     <img 
         src={EMOTE2_SRC} 
         style={{
             position: "absolute",
-            right: "990px", // Il restera toujours à 10px du bord droit du bandeau
-            top: "45%",
-            transform: "translateY(-50%)",
-            height: "35px",
-            zIndex: 100,
+            top: "50%",
+            /* Au lieu de 850px (bord écran), on utilise un décalage par rapport au centre du bandeau */
+            left: "50%", 
+            transform: "translate(-70px, -50%)", // Le -180px le pousse à gauche du mot
+            height: 35,
+            zIndex: 1000,
             pointerEvents: "none",
             filter: "drop-shadow(0 0 6px rgba(255,215,0,0.3))"
         }}
     />
+    
+    RÈGLEMENT
 </div>
               {config.reglement?(
                 <div style={{padding:"16px",fontFamily:"'Nunito',sans-serif"}}>
