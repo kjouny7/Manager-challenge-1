@@ -305,6 +305,15 @@ function PublicView({ config, ranked, participants, onAdminClick }) {
         @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
         @keyframes rgbBorderResto{0%{box-shadow:0 0 15px rgba(255,215,0,0.5),inset 0 0 10px rgba(255,215,0,0.05),0 0 0 2px #ff0000}25%{box-shadow:0 0 40px rgba(255,215,0,0.9),0 0 70px rgba(255,215,0,0.4),inset 0 0 25px rgba(255,215,0,0.12),0 0 0 2px #FFD700}50%{box-shadow:0 0 15px rgba(255,215,0,0.5),inset 0 0 10px rgba(255,215,0,0.05),0 0 0 2px #00ff00}75%{box-shadow:0 0 40px rgba(255,215,0,0.9),0 0 70px rgba(255,215,0,0.4),inset 0 0 25px rgba(255,215,0,0.12),0 0 0 2px #0000ff}100%{box-shadow:0 0 15px rgba(255,215,0,0.5),inset 0 0 10px rgba(255,215,0,0.05),0 0 0 2px #ff0000}}
         .gold-card-rgb{animation:rgbBorderResto 3s infinite}
+        @keyframes rgbText{
+          0%{color:#fff;text-shadow:-1.5px -1.5px 0 #000,1.5px -1.5px 0 #000,-1.5px 1.5px 0 #000,1.5px 1.5px 0 #000,0 0 10px #ff0000,0 0 20px #ff0000}
+          16%{color:#fff;text-shadow:-1.5px -1.5px 0 #000,1.5px -1.5px 0 #000,-1.5px 1.5px 0 #000,1.5px 1.5px 0 #000,0 0 10px #ff8800,0 0 20px #ff8800}
+          33%{color:#fff;text-shadow:-1.5px -1.5px 0 #000,1.5px -1.5px 0 #000,-1.5px 1.5px 0 #000,1.5px 1.5px 0 #000,0 0 10px #FFD700,0 0 20px #FFD700}
+          50%{color:#fff;text-shadow:-1.5px -1.5px 0 #000,1.5px -1.5px 0 #000,-1.5px 1.5px 0 #000,1.5px 1.5px 0 #000,0 0 10px #00ff88,0 0 20px #00ff88}
+          66%{color:#fff;text-shadow:-1.5px -1.5px 0 #000,1.5px -1.5px 0 #000,-1.5px 1.5px 0 #000,1.5px 1.5px 0 #000,0 0 10px #00aaff,0 0 20px #00aaff}
+          83%{color:#fff;text-shadow:-1.5px -1.5px 0 #000,1.5px -1.5px 0 #000,-1.5px 1.5px 0 #000,1.5px 1.5px 0 #000,0 0 10px #cc00ff,0 0 20px #cc00ff}
+          100%{color:#fff;text-shadow:-1.5px -1.5px 0 #000,1.5px -1.5px 0 #000,-1.5px 1.5px 0 #000,1.5px 1.5px 0 #000,0 0 10px #ff0000,0 0 20px #ff0000}
+        }
         @keyframes confetti{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(-60px) rotate(360deg);opacity:0}}
         @keyframes shine{0%{background-position:-200% 0}100%{background-position:200% 0}}
         @keyframes ledBlink{0%,88%,100%{opacity:1}89%{opacity:0.3}94%{opacity:1}}
@@ -372,16 +381,15 @@ function PublicView({ config, ranked, participants, onAdminClick }) {
     McDONALD'S
   </div>
   
-  {/* Titre ROAD TO EXCELLENCE - Massif + Italique + Contour */}
+  {/* Titre ROAD TO EXCELLENCE - Massif + Italique + RGB */}
   <div style={{
   fontSize: "22px", 
   letterSpacing: "-0.5px", 
-  color: "#ffffff", 
   lineHeight: "1", 
   fontFamily: "Impact, sans-serif", 
   fontWeight: "900",
   fontStyle: "italic",
-  textShadow: "-1.5px -1.5px 0 #000, 1.5px -1.5px 0 #000, -1.5px 1.5px 0 #000, 1.5px 1.5px 0 #000"
+  animation: "rgbText 3s linear infinite"
 }}>
   ROAD TO <span style={{ color: "#FFBC0D" }}>EXCELLENCE</span>
 </div>
@@ -618,7 +626,7 @@ function PublicView({ config, ranked, participants, onAdminClick }) {
                               <div style={{width:22,height:22,background:"rgba(255,255,255,0.05)",border:`1px solid ${lc}44`,borderRadius:4,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12}}>{EMOJIS[i%8]}</div>
                               <div style={{minWidth:0}}>
                                 <div style={{fontSize:11,letterSpacing:1,color:"#fff",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",textShadow:"1px 1px 0 #000"}}>{p.name.toUpperCase()}</div>
-                                {p.restaurant&&<div style={{fontSize:8,color:"rgba(255,215,0,0.35)",fontFamily:"'Nunito',sans-serif"}}>🍔 {p.restaurant}</div>}
+                                {p.restaurant&&<div style={{fontSize:8,color:"rgba(255,215,0,0.35)",fontFamily:"'Nunito',sans-serif"}}>{p.restaurant}</div>}
                               </div>
                             </div>
                             {config.criteria.map(c=>(
@@ -852,10 +860,7 @@ if (typeof document !== 'undefined' && !document.getElementById('float-style')) 
 
                   </div>
                 </div>
-                <div style={{textAlign:"right"}}>
-                  <div className="led" style={{fontSize:18,color:st.brd,textShadow:`0 0 8px ${st.brd}`}}>{r.total.toFixed(1)}</div>
-                  <div style={{fontSize:7,letterSpacing:2,color:"rgba(255,255,255,0.22)"}}>POINTS</div>
-                </div>
+
               </div>
 
               <div style={{padding:"9px 12px"}}>
