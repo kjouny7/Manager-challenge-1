@@ -843,7 +843,7 @@ if (typeof document !== 'undefined' && !document.getElementById('float-style')) 
                   {(()=>{
     const CHAR_MAP={"Moulins":MOULINS_CHAR,"Decize":DECIZE_CHAR,"Avermes":AVERMES_CHAR};
     const char=CHAR_MAP[r.name];
-    if(char) return <img src={char} alt="" style={{height:160,width:"auto",objectFit:"contain",flexShrink:0,filter:"drop-shadow(0 0 4px rgba(255,215,0,0.3))"}} />;
+    if(char) return <img src={char} alt="" style={{height:90,width:"auto",objectFit:"contain",flexShrink:0,filter:"drop-shadow(0 0 4px rgba(255,215,0,0.3))"}} />;
     if(RESTO_AVATARS[r.name]||st.icon) return <img src={RESTO_AVATARS[r.name]||st.icon} alt="" style={{width:55,height:55,objectFit:"cover",borderRadius:6,flexShrink:0}} />;
     return <span style={{fontSize:18}}>🍔</span>;
   })()}
