@@ -1015,7 +1015,7 @@ function AdminView({ config, setConfig, participants, setParticipants, ranked, a
   const configSaveTimer = useRef(null);
   const saveConfigDebounced = useCallback((newConfig) => {
     if (configSaveTimer.current) clearTimeout(configSaveTimer.current);
-    configSaveTimer.current = setTimeout(() => dbSaveConfig(newConfig), 600);
+    configSaveTimer.current = setTimeout(() => dbSaveConfig(newConfig), 1500);
   }, []);
 
   async function addParticipant() {
@@ -1233,7 +1233,7 @@ function AdminView({ config, setConfig, participants, setParticipants, ranked, a
             <textarea style={{ ...s.input, marginTop:12, minHeight:380, resize:"vertical", lineHeight:1.7, fontSize:14, fontFamily:"inherit" }}
               placeholder={"Rédigez ici le règlement du concours...\n\nEx :\nArticle 1 — Participants\n...\n\nArticle 2 — Critères\n..."}
               value={config.reglement ?? ""}
-              onChange={act(e => { const v = e.target.value; setConfig(c => { const n={...c,reglement:v}; saveConfigDebounced(n); return n; }); })}/>
+              onChange={act(e => { const v = e.target.value; setConfig(c => ({...c,reglement:v})); })} onBlur={act(e => { saveConfigDebounced(config); })}/>
             <div style={{ marginTop:10, display:"flex", alignItems:"center", gap:12 }}>
               <span style={{ color:"#6b7280", fontSize:12 }}>{(config.reglement??"").length} caractères</span>
               {config.reglement && (
@@ -1267,8 +1267,8 @@ function AdminView({ config, setConfig, participants, setParticipants, ranked, a
         {tab === "settings" && (
           <div style={s.section}>
             <h3 style={s.sectionTitle}>Informations du concours</h3>
-            <div style={s.fieldGroup}><label style={s.fieldLabel}>Titre</label><input style={s.input} value={config.title} onChange={act(e => { const v = e.target.value; setConfig(c => { const n={...c,title:v}; saveConfigDebounced(n); return n; }); })}/></div>
-            <div style={s.fieldGroup}><label style={s.fieldLabel}>Sous-titre</label><input style={s.input} value={config.subtitle} onChange={act(e => { const v = e.target.value; setConfig(c => { const n={...c,subtitle:v}; saveConfigDebounced(n); return n; }); })}/></div>
+            <div style={s.fieldGroup}><label style={s.fieldLabel}>Titre</label><input style={s.input} value={config.title} onChange={act(e => { const v = e.target.value; setConfig(c => ({...c,title:v})); })} onBlur={act(e => { saveConfigDebounced(config); })}/></div>
+            <div style={s.fieldGroup}><label style={s.fieldLabel}>Sous-titre</label><input style={s.input} value={config.subtitle} onChange={act(e => { const v = e.target.value; setConfig(c => ({...c,subtitle:v})); })} onBlur={act(e => { saveConfigDebounced(config); })}/></div>
             <div style={s.fieldGroup}><label style={s.fieldLabel}>Date de fin du concours (compte à rebours)</label><input type="datetime-local" style={s.input} value={config.endDate||""} onChange={act(e => { const v = e.target.value; setConfig(c => { const n={...c,endDate:v}; saveConfigDebounced(n); return n; }); })}/></div>
 
             <div style={s.fieldGroup}><label style={s.fieldLabel}>🚀 Date de top départ (compte à rebours jaune)</label><input type="datetime-local" style={s.input} value={config.startDate||""} onChange={act(e => { const v = e.target.value; setConfig(c => { const n={...c,startDate:v}; saveConfigDebounced(n); return n; }); })}/></div>
