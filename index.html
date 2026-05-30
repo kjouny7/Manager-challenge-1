@@ -163,30 +163,7 @@ function Countdown({ target }) {
 }
 
 // ── MAIN APP ─────────────────────────────────────────────────────────────────
-function IntroVideo({ onSkip }) {
-  return (
-    <div style={{position:"fixed",top:0,left:0,width:"100%",height:"100%",background:"#000",zIndex:99999,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
-      <video
-        src="https://res.cloudinary.com/degwnons0/video/upload/v1778791091/vidu-video-3292408421150223_iemjox.mp4"
-        autoPlay
-        muted
-        playsInline
-        style={{width:"100%",height:"100%",objectFit:"contain",background:"#000"}}
-        onLoadedMetadata={e => { e.target.currentTime = 2; }}
-        onEnded={onSkip}
-      />
-      <button
-        onClick={onSkip}
-        style={{position:"absolute",bottom:40,right:20,background:"rgba(0,0,0,0.6)",border:"2px solid rgba(255,215,0,0.6)",color:"#FFD700",borderRadius:20,padding:"8px 18px",fontSize:13,letterSpacing:2,cursor:"pointer",fontFamily:"'Bebas Neue',sans-serif",backdropFilter:"blur(4px)"}}
-      >
-        PASSER ▶
-      </button>
-    </div>
-  );
-}
-
 function App() {
-  const [showIntro, setShowIntro] = React.useState(true);
   const [view, setView]               = useState("public");
   const [auth, setAuth]               = useState(null);
   const [ready, setReady]             = useState(false);
@@ -286,7 +263,6 @@ function App() {
     .map(p => ({ ...p, total: computeTotal(p, config.criteria) }))
     .sort((a, b) => b.total - a.total);
 
-  if (showIntro) return <IntroVideo onSkip={() => setShowIntro(false)} />;
 
   if (!ready) return (
     <div style={{ background:"#FFF8E7", minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center" }}>
@@ -825,7 +801,8 @@ if (typeof document !== 'undefined' && !document.getElementById('float-style')) 
   );
   return(
     <div style={{padding:"12px 10px 0"}}>
-      <div style={{display:"flex",gap:6,alignItems:"flex-end",marginBottom:12}}>
+      {restaurantScores.length>=3?(
+      <div style={{display:"flex",gap:6,alignItems:"flex-end",marginBottom:12,justifyContent:"center"}}>
         {[restaurantScores[1],restaurantScores[0],restaurantScores[2]].map((r,i)=>{
           if(!r)return<div key={i} style={{flex:1}}/>;
           const rk=restaurantScores.indexOf(r);
@@ -841,18 +818,9 @@ if (typeof document !== 'undefined' && !document.getElementById('float-style')) 
               {isFirst&&<div style={{fontSize:16,marginBottom:2,filter:"drop-shadow(0 0 8px gold)"}}>👑</div>}
               <div className={isFirst?"gold-card":st.cls} style={{width:"100%",background:st.bg,border:`2px solid ${st.brd}`,borderRadius:isFirst?"10px 10px 0 0":"8px 8px 0 0",overflow:"hidden"}}>
                 <div style={{height:2,background:`linear-gradient(90deg,transparent,${st.brd},transparent)`}}/>
- <div style={{ width: "100%", display: "flex", justifyContent: "center", padding: "8px 0 4px" }}>
-  {(RESTO_AVATARS[r.name] || st.icon) ? (
-    <img 
-      src={RESTO_AVATARS[r.name] || st.icon} 
-      alt=""
-      className="float-anim" 
-      style={{ width: isFirst?110:85, height: isFirst?110:85, objectFit: "cover", borderRadius: 6, border: `1px solid ${st.brd}44` }} 
-    />
-  ) : (
-    <span style={{ fontSize: 28 }}>🍔</span>
-  )}
-</div>                 
+                <div style={{width:"100%",display:"flex",justifyContent:"center",padding:"8px 0 4px"}}>
+                  {(RESTO_AVATARS[r.name]||st.icon)?<img src={RESTO_AVATARS[r.name]||st.icon} alt="" className="float-anim" style={{width:isFirst?110:85,height:isFirst?110:85,objectFit:"cover",borderRadius:6,border:`1px solid ${st.brd}44`}}/>:<span style={{fontSize:28}}>🍔</span>}
+                </div>
                 <div style={{textAlign:"center",fontSize:isFirst?13:10,letterSpacing:1,color:"#fff",padding:"0 5px 3px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",textShadow:"1px 1px 0 #000"}}>{r.name.toUpperCase()}</div>
                 <div style={{margin:"0 7px 7px",background:"rgba(0,0,0,0.55)",borderRadius:5,padding:"4px",textAlign:"center",border:`1px solid ${st.brd}30`}}>
                   <div className="led" style={{fontSize:isFirst?20:15,color:st.brd,textShadow:`0 0 8px ${st.brd}`}}>{r.total.toFixed(1)}</div>
@@ -865,6 +833,36 @@ if (typeof document !== 'undefined' && !document.getElementById('float-style')) 
           );
         })}
       </div>
+      ):(
+      <div style={{display:"flex",gap:8,alignItems:"flex-end",marginBottom:12,justifyContent:"center"}}>
+        {restaurantScores.map((r,i)=>{
+          const st=RS[i]||RS[2];
+          const isFirst=i===0;
+          return(
+            <div key={r.name} className={`${["pop1","pop2","pop3"][i]}`} style={{flex:isFirst?1.2:1,display:"flex",flexDirection:"column",alignItems:"center",position:"relative"}}>
+              {isFirst&&<span style={{position:"absolute",fontSize:14,color:"#FFD700",top:-5,left:35,animation:"confetti 2s 0s ease-in-out infinite",filter:"drop-shadow(0 0 5px #FFD700)",zIndex:9}}>✦</span>}
+              {isFirst&&<span style={{position:"absolute",fontSize:9,color:"#FFC72C",top:5,left:10,animation:"confetti 2s 0.3s ease-in-out infinite",zIndex:9}}>★</span>}
+              {isFirst&&<span style={{position:"absolute",fontSize:16,color:"#FFD700",top:0,right:32,animation:"confetti 2s 0.6s ease-in-out infinite",filter:"drop-shadow(0 0 6px #FFD700)",zIndex:9}}>✦</span>}
+              {isFirst&&<span style={{position:"absolute",fontSize:8,color:"#DA291C",top:18,right:10,animation:"confetti 2s 0.9s ease-in-out infinite",zIndex:9}}>★</span>}
+              {isFirst&&<div style={{fontSize:16,marginBottom:2,filter:"drop-shadow(0 0 8px gold)"}}>👑</div>}
+              <div className={isFirst?"gold-card":st.cls} style={{width:"100%",background:st.bg,border:`2px solid ${st.brd}`,borderRadius:isFirst?"10px 10px 0 0":"8px 8px 0 0",overflow:"hidden"}}>
+                <div style={{height:2,background:`linear-gradient(90deg,transparent,${st.brd},transparent)`}}/>
+                <div style={{width:"100%",display:"flex",justifyContent:"center",padding:"8px 0 4px"}}>
+                  {(RESTO_AVATARS[r.name]||st.icon)?<img src={RESTO_AVATARS[r.name]||st.icon} alt="" className="float-anim" style={{width:isFirst?110:85,height:isFirst?110:85,objectFit:"cover",borderRadius:6,border:`1px solid ${st.brd}44`}}/>:<span style={{fontSize:28}}>🍔</span>}
+                </div>
+                <div style={{textAlign:"center",fontSize:isFirst?13:10,letterSpacing:1,color:"#fff",padding:"0 5px 3px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",textShadow:"1px 1px 0 #000"}}>{r.name.toUpperCase()}</div>
+                <div style={{margin:"0 7px 7px",background:"rgba(0,0,0,0.55)",borderRadius:5,padding:"4px",textAlign:"center",border:`1px solid ${st.brd}30`}}>
+                  <div className="led" style={{fontSize:isFirst?20:15,color:st.brd,textShadow:`0 0 8px ${st.brd}`}}>{r.total.toFixed(1)}</div>
+                  <div style={{fontSize:7,letterSpacing:2,color:"rgba(255,255,255,0.25)"}}>POINTS</div>
+                </div>
+                <div style={{height:2,background:`linear-gradient(90deg,transparent,${st.brd},transparent)`}}/>
+              </div>
+              <div style={{width:"90%",height:isFirst?28:22,background:`linear-gradient(180deg,${st.brd},${st.brd}88)`,borderRadius:"0 0 7px 7px",display:"flex",alignItems:"center",justifyContent:"center",fontSize:isFirst?13:11,color:i===0?"#111":"#fff",letterSpacing:2}}>{["1ER","2ÈME","3ÈME"][i]}</div>
+            </div>
+          );
+        })}
+      </div>
+      )}
       <div style={{display:"flex",flexDirection:"column",gap:8}}>
         {restaurantScores.map((r,i)=>{
           const st=RS[i]||RS[2];
