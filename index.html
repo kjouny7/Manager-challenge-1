@@ -77,6 +77,7 @@ async function dbSaveConfig(cfg) {
     end_date: cfg.endDate||"",
     start_date: cfg.startDate||"",
     restaurants: cfg.restaurants||["Decize","Avermes","Moulins"],
+    previous_ranks: JSON.stringify(cfg.previousRanks||{}),
     criteria: cfg.criteria||[],
   });
 }
@@ -196,6 +197,7 @@ function App() {
             subtitle: c.subtitle||"",
             criteria: c.criteria||[],
             reglement: c.reglement||"",
+              previousRanks: c.previous_ranks ? JSON.parse(c.previous_ranks) : {},
             hidden: c.hidden||false,
             endDate: c.end_date||"",
               startDate: c.start_date||"",
@@ -622,7 +624,19 @@ function PublicView({ config, ranked, participants, onAdminClick }) {
                         const EMOJIS=["🍔","🥤","🍦","🍗","🥚","🧆","🌮","🥓"];
                         return(
                           <div key={p.id} style={{display:"flex",alignItems:"center",padding:"7px 10px",borderBottom:"1px solid rgba(255,255,255,0.03)",background:bg,borderLeft:`3px solid ${i<3?lc:"rgba(255,255,255,0.03)"}`}}>
-                            <div style={{width:30,flexShrink:0}}>{i<3?<span style={{fontSize:15}}>{MEDAL[i]}</span>:<span style={{fontSize:11,color:"rgba(255,255,255,0.2)"}}>#{i+1}</span>}</div>
+                            <div style={{width:30,flexShrink:0,display:"flex",alignItems:"center",gap:2}}>
+                              {i<3?<span style={{fontSize:15}}>{MEDAL[i]}</span>:<span style={{fontSize:11,color:"rgba(255,255,255,0.2)"}}>#{i+1}</span>}
+                              {(()=>{
+                                const prev=config.previousRanks?.[p.id];
+                                if(!prev||prev===i+1)return null;
+                                const up=prev>i+1;
+                                const diff=Math.abs(prev-(i+1));
+                                return<div style={{display:"flex",flexDirection:"column",alignItems:"center",lineHeight:1}}>
+                                  <span style={{fontSize:9,color:up?"#00e676":"#ff4444",filter:`drop-shadow(0 0 4px ${up?"#00e676":"#ff4444"})`}}>{up?"▲":"▼"}</span>
+                                  <span style={{fontSize:7,color:up?"#00e676":"#ff4444",fontFamily:"'Nunito',sans-serif"}}>{diff}</span>
+                                </div>;
+                              })()}
+                            </div>
                             <div style={{width:120,flexShrink:0,display:"flex",alignItems:"center",gap:6,minWidth:0}}>
                               <div style={{width:22,height:22,background:"rgba(255,255,255,0.05)",border:`1px solid ${lc}44`,borderRadius:4,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12}}>{EMOJIS[i%8]}</div>
                               <div style={{minWidth:0}}>
@@ -1056,6 +1070,12 @@ function AdminView({ config, setConfig, participants, setParticipants, ranked, a
   async function updateScore(pid, cid, val) {
     const updated = participants.find(p=>p.id===pid);
     if (!updated) return;
+    // Sauvegarder les rangs actuels avant la mise à jour
+    const currentRanks = {};
+    ranked.forEach((p,i) => { currentRanks[p.id] = i+1; });
+    const newCfg = {...config, previousRanks: currentRanks};
+    setConfig(newCfg);
+    saveConfigDebounced(newCfg);
     const newP = { ...updated, scores:{...updated.scores,[cid]:val}, updatedAt:Date.now() };
     setEditP(ep => ep?.id===pid ? { ...ep, scores:{...ep.scores,[cid]:val} } : ep);
     await dbSaveParticipant(newP);
