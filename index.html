@@ -622,7 +622,7 @@ function PublicView({ config, ranked, participants, onAdminClick }) {
                       {ranked.map((p,i)=>{
                         const lc=i===0?"#FFD700":i===1?"#C0C0C0":i===2?"#cd7f32":"rgba(218,41,28,0.6)";
                         const bg=i===0?"rgba(255,215,0,0.05)":i===1?"rgba(192,192,192,0.03)":i===2?"rgba(205,127,50,0.03)":"transparent";
-                        const EMOJIS=["🍔","🥤","🍦","🍗","🥚","🧆","🌮","🥓"];
+                        const EMOJIS=["🍔","🥤","🍦","🧊","🥚","🧆","🌮","☕","🥐","🥪"];
                         return(
                           <div key={p.id} style={{display:"flex",alignItems:"center",padding:"7px 10px",borderBottom:"1px solid rgba(255,255,255,0.03)",background:bg,borderLeft:`3px solid ${i<3?lc:"rgba(255,255,255,0.03)"}`}}>
                             <div style={{width:30,flexShrink:0}}>{i<3?<span style={{fontSize:15}}>{MEDAL[i]}</span>:<span style={{fontSize:11,color:"rgba(255,255,255,0.2)"}}>#{i+1}</span>}</div>
