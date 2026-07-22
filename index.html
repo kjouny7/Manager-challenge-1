@@ -1072,28 +1072,7 @@ function AdminView({ config, setConfig, participants, setParticipants, ranked, a
   async function updateScore(pid, cid, val) {
     const updated = participants.find(p=>p.id===pid);
     if (!updated) return;
-    // Snapshot du classement ACTUEL avant la modification
-    const snapshot = {};
-    ranked.forEach((p,i) => { snapshot[p.id] = i+1; });
-    // Calculer le nouveau classement simulé pour comparer après
     const newP = { ...updated, scores:{...updated.scores,[cid]:val}, updatedAt:Date.now() };
-    const newParticipants = participants.map(p => p.id===pid ? newP : p);
-    const newRanked = [...newParticipants]
-      .filter(p=>p.name)
-      .sort((a,b)=>{
-        const ta=config.criteria.reduce((s,c)=>s+(parseFloat(a.scores?.[c.id])||0)*c.coefficient,0);
-        const tb=config.criteria.reduce((s,c)=>s+(parseFloat(b.scores?.[c.id])||0)*c.coefficient,0);
-        return tb-ta;
-      });
-    const newRanks = {};
-    newRanked.forEach((p,i) => { newRanks[p.id] = i+1; });
-    // Ne sauvegarder le snapshot que si le classement change
-    const rankChanged = Object.keys(snapshot).some(id => snapshot[id] !== newRanks[id]);
-    if (rankChanged) {
-      const newCfg = {...config, previousRanks: snapshot};
-      setConfig(newCfg);
-      saveConfigDebounced(newCfg);
-    }
     setEditP(ep => ep?.id===pid ? { ...ep, scores:{...ep.scores,[cid]:val} } : ep);
     await dbSaveParticipant(newP);
   }
@@ -1379,6 +1358,35 @@ function AdminView({ config, setConfig, participants, setParticipants, ranked, a
                 <span style={{ color:config.hidden?"#f87171":"#4ade80", fontSize:13, fontWeight:700 }}>
                   {config.hidden ? "Masqué" : "Visible"}
                 </span>
+              </div>
+
+              <div style={{marginTop:12,padding:"12px",background:"rgba(255,215,0,0.05)",border:"1px solid rgba(255,215,0,0.2)",borderRadius:8}}>
+                <p style={{...s.helpText,marginBottom:8}}>📸 Fige le classement actuel comme référence pour les flèches de progression. Clique avant de modifier les scores.</p>
+                <div style={s.row}>
+                  <button style={{...s.addBtn, background:"rgba(255,215,0,0.15)", color:"#FFD700", border:"1px solid rgba(255,215,0,0.4)"}}
+                    onClick={act(()=>{
+                      const snapshot={};
+                      ranked.forEach((p,i)=>{ snapshot[p.id]=i+1; });
+                      const newCfg={...config,previousRanks:snapshot};
+                      setConfig(newCfg);
+                      dbSaveConfig(newCfg);
+                      addLog("📸 Snapshot du classement sauvegardé");
+                      alert("✅ Classement de référence figé ! Tu peux maintenant modifier les scores.");
+                    })}>
+                    📸 Figer le classement de référence
+                  </button>
+                  <button style={{...s.dangerBtn, marginLeft:8}}
+                    onClick={act(()=>{
+                      if(window.confirm("Effacer toutes les flèches de progression ?")){
+                        const newCfg={...config,previousRanks:{}};
+                        setConfig(newCfg);
+                        dbSaveConfig(newCfg);
+                        addLog("Flèches de progression réinitialisées");
+                      }
+                    })}>
+                    🗑 Effacer les flèches
+                  </button>
+                </div>
               </div>
             </div>
 
